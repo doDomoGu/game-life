@@ -1,10 +1,9 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref } from 'vue';
-import { RouterLink, useRoute } from 'vue-router';
+import { useRoute } from 'vue-router';
 import { useAuthStore } from '@game-life/platform-web';
-import { bingoRoutes } from '../routes.js';
 import type { BingoRoomView } from './api.js';
-import { drawBingoRoom, fetchBingoRoom, startBingoRoom } from './api.js';
+import { drawBingoRoom, fetchBingoRoom } from './api.js';
 
 const route = useRoute();
 const auth = useAuthStore();
@@ -32,19 +31,6 @@ async function refresh() {
     error.value = msg ?? '加载失败';
   } finally {
     loading.value = false;
-  }
-}
-
-async function onStart() {
-  if (!code.value) return;
-  try {
-    room.value = await startBingoRoom(code.value);
-  } catch (e: unknown) {
-    const msg =
-      e && typeof e === 'object' && 'response' in e
-        ? (e as { response?: { data?: { message?: string } } }).response?.data?.message
-        : undefined;
-    error.value = msg ?? '开始失败';
   }
 }
 
@@ -77,8 +63,6 @@ onUnmounted(() => {
 
 <template>
   <div class="page room">
-    <RouterLink :to="bingoRoutes.roomLobbyPath" class="back">← 房间列表</RouterLink>
-
     <header v-if="room" class="room__head">
       <div>
         <p class="code">房间 {{ room.code }}</p>
@@ -107,13 +91,7 @@ onUnmounted(() => {
       </ul>
     </section>
 
-    <div v-if="room?.status === 'waiting' && isHost" class="actions">
-      <button type="button" class="btn" @click="onStart">开始游戏</button>
-      <p class="hint">你是房主，人满后点击开始（至少 1 人）</p>
-    </div>
-    <p v-else-if="room?.status === 'waiting'" class="hint">等待房主开始…</p>
-
-    <section v-if="room && room.status !== 'waiting'" class="draws">
+    <section v-if="room" class="draws">
       <h2>已揭晓</h2>
       <div class="draw-chips">
         <span v-for="id in room.drawnItemIds" :key="id" class="chip">{{ cellLabel(id) }}</span>

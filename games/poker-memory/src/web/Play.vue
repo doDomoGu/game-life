@@ -1,13 +1,14 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue';
+import { inject, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
-import { submitRecord } from '@game-life/platform-web';
+import { ROOM_PLAY_KEY, submitRecord, type RoomPlayContext } from '@game-life/platform-web';
 import { POKER_MEMORY_GAME_ID } from '@game-life/game-poker-memory/meta';
 import { pokerMemoryRoutes } from '../routes.js';
 import { usePokerMemory } from './usePokerMemory';
 import { suitColor, suitSymbol } from './deck';
 
 const router = useRouter();
+const roomPlay = inject<RoomPlayContext | null>(ROOM_PLAY_KEY, null);
 const {
   cards,
   flipTurns,
@@ -16,6 +17,7 @@ const {
   finished,
   locked,
   reset,
+  completeForTest,
   onCardTap,
   durationMs,
 } = usePokerMemory();
@@ -36,6 +38,7 @@ watch(
         durationMs: durationMs(),
       });
       saved.value = true;
+      if (roomPlay) await roomPlay.complete();
     } catch (e: unknown) {
       const msg =
         e && typeof e === 'object' && 'response' in e
@@ -49,6 +52,10 @@ watch(
 );
 
 function goIntro() {
+  if (roomPlay) {
+    router.push({ name: 'room', params: { code: roomPlay.code } });
+    return;
+  }
   router.push({ name: pokerMemoryRoutes.introRouteName });
 }
 
@@ -74,6 +81,9 @@ function playAgain() {
     </header>
 
     <p class="play__hint">翻开两张相同点数的牌即配对；每翻开两张计 1 次，次数越少越好。</p>
+    <button v-if="!finished" type="button" class="btn btn--ghost test-btn" @click="completeForTest">
+      测试：一键完成
+    </button>
 
     <div class="board" :class="{ 'board--done': finished }">
       <button
@@ -104,7 +114,7 @@ function playAgain() {
       <p v-if="submitting" class="muted">正在保存记录…</p>
       <p v-else-if="saved" class="ok">记录已保存</p>
       <p v-if="submitError" class="error">{{ submitError }}</p>
-      <div class="result__actions">
+      <div v-if="!roomPlay" class="result__actions">
         <button type="button" class="btn" @click="playAgain">再玩一局</button>
         <button type="button" class="btn btn--ghost" @click="openHistory">
           查看历史
@@ -145,8 +155,15 @@ function playAgain() {
 .play__hint {
   font-size: 13px;
   color: var(--muted);
-  margin: 0 0 16px;
+  margin: 0 0 8px;
   line-height: 1.4;
+}
+
+.test-btn {
+  width: 100%;
+  margin-bottom: 16px;
+  min-height: 36px;
+  font-size: 13px;
 }
 
 .board {

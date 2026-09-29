@@ -91,6 +91,20 @@ export function usePokerMemory() {
     }, FLIP_BACK_MS);
   }
 
+  function completeForTest() {
+    if (finished.value) return;
+    if (startedAt.value == null) startedAt.value = Date.now();
+    for (const card of cards.value) {
+      card.flipped = true;
+      card.matched = true;
+    }
+    matchedPairs.value = totalPairs;
+    flipTurns.value = totalPairs;
+    locked.value = false;
+    firstPick.value = null;
+    finished.value = true;
+  }
+
   reset();
 
   return {
@@ -102,6 +116,7 @@ export function usePokerMemory() {
     finished,
     locked,
     reset,
+    completeForTest,
     onCardTap,
     durationMs,
   };

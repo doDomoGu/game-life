@@ -9,7 +9,6 @@ export const bingoIntro: GameIntroConfig = {
     '横、竖、斜任意一线 5 格全亮即获胜',
   ],
   bestRecordLabel: '获胜局数',
-  historyScoreHint: '单机成绩记录（房间对战暂不写入）',
-  roomLobbyRouteName: 'bingo-room-lobby',
-  roomLobbyLabel: '创建 / 加入房间',
+  recordStyle: 'match',
+  historyScoreHint: '每局记录对手与胜负',
 };

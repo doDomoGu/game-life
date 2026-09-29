@@ -34,7 +34,14 @@ export async function getMyRecords(
 export async function getMyStats(userId: string, gameId?: string): Promise<MyStats> {
   const resolvedGameId = gameId ?? getDefaultGameId();
   if (!resolvedGameId) {
-    return { gameId: '', totalGames: 0, bestFlipTurns: null, lastPlayedAt: null };
+    return {
+      gameId: '',
+      totalGames: 0,
+      bestFlipTurns: null,
+      wins: null,
+      opponents: [],
+      lastPlayedAt: null,
+    };
   }
   const { items } = await recordRepo.listRecordsByUser(userId, {
     gameId: resolvedGameId,
@@ -42,13 +49,40 @@ export async function getMyStats(userId: string, gameId?: string): Promise<MySta
     pageSize: 10_000,
   });
   if (items.length === 0) {
-    return { gameId: resolvedGameId, totalGames: 0, bestFlipTurns: null, lastPlayedAt: null };
+    return {
+      gameId: resolvedGameId,
+      totalGames: 0,
+      bestFlipTurns: null,
+      wins: null,
+      opponents: [],
+      lastPlayedAt: null,
+    };
   }
-  const bestFlipTurns = Math.min(...items.map((r) => r.rawScore));
+  const matchRecords = items.filter((r) => typeof r.meta?.won === 'boolean');
+  const wins = matchRecords.length > 0 ? matchRecords.filter((r) => r.meta?.won === true).length : null;
+  const opponents = new Set<string>();
+  for (const record of items) {
+    const list = record.meta?.opponents;
+    if (!Array.isArray(list)) continue;
+    for (const opponent of list) {
+      if (
+        opponent &&
+        typeof opponent === 'object' &&
+        'username' in opponent &&
+        typeof opponent.username === 'string' &&
+        opponent.username
+      ) {
+        opponents.add(opponent.username);
+      }
+    }
+  }
+  const bestFlipTurns = wins == null ? Math.min(...items.map((r) => r.rawScore)) : null;
   return {
     gameId: resolvedGameId,
     totalGames: items.length,
     bestFlipTurns,
+    wins,
+    opponents: [...opponents],
     lastPlayedAt: items[0]?.playedAt ?? null,
   };
 }

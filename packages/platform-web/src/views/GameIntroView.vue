@@ -33,16 +33,6 @@ async function loadStats() {
 onMounted(loadStats);
 watch(gameId, loadStats);
 
-function startPlay() {
-  const g = game.value;
-  if (g?.loadPlay && g.playRouteName) router.push({ name: g.playRouteName });
-}
-
-function openRoomLobby() {
-  const name = game.value?.intro.roomLobbyRouteName;
-  if (name) router.push({ name });
-}
-
 function openHistory() {
   if (gameId.value) {
     router.push({ name: 'game-history', params: { gameId: gameId.value } });
@@ -77,38 +67,19 @@ function openHistory() {
       </div>
       <div class="stat">
         <span class="stat__label">{{ game.intro.bestRecordLabel }}</span>
-        <span class="stat__value">{{ stats.bestFlipTurns ?? '—' }}</span>
+        <span class="stat__value">{{
+          game.intro.recordStyle === 'match' ? (stats.wins ?? 0) : (stats.bestFlipTurns ?? '—')
+        }}</span>
       </div>
     </div>
+    <p v-if="stats && stats.opponents.length" class="opponents">
+      一起玩过：{{ stats.opponents.join('、') }}
+    </p>
     <p v-else-if="!loadingStats" class="stats-empty">暂无对局记录</p>
 
-    <button
-      v-if="game.intro.roomLobbyRouteName"
-      type="button"
-      class="btn start"
-      @click="openRoomLobby"
-    >
-      {{ game.intro.roomLobbyLabel ?? '创建 / 加入房间' }}
-    </button>
-    <button v-if="game.loadPlay" type="button" class="btn" :class="{ start: !game.intro.roomLobbyRouteName }" @click="startPlay">
-      开始游戏
-    </button>
-    <button
-      v-if="game.intro.bestRecordLabel && !game.intro.roomLobbyRouteName"
-      type="button"
-      class="btn btn--ghost history-btn"
-      @click="openHistory"
-    >
-      对局历史
-    </button>
-    <button
-      v-else-if="game.intro.roomLobbyRouteName && game.intro.bestRecordLabel"
-      type="button"
-      class="btn btn--ghost history-btn"
-      @click="openHistory"
-    >
-      对局历史
-    </button>
+    <p class="hint">由房主在房间中选择本游戏并开始。</p>
+    <button type="button" class="btn start" @click="router.push({ name: 'lobby' })">返回房间列表</button>
+    <button type="button" class="btn btn--ghost history-btn" @click="openHistory">对局历史</button>
   </div>
   <div v-else class="page">
     <p class="muted">游戏不存在</p>
@@ -192,10 +163,23 @@ h1 {
   color: var(--accent);
 }
 
+.hint {
+  color: var(--muted);
+  font-size: 14px;
+  margin: 8px 0 16px;
+}
+
 .stats-empty {
   color: var(--muted);
   font-size: 14px;
   margin: 20px 0 24px;
+}
+
+.opponents {
+  margin: 0 0 20px;
+  font-size: 14px;
+  color: var(--muted);
+  line-height: 1.5;
 }
 
 .start {

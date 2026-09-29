@@ -34,7 +34,7 @@ async function onSubmit() {
 <template>
   <div class="page">
     <h1>登录</h1>
-    <p class="sub">Game Life · 登录后进入游戏大厅</p>
+    <p class="sub">Game Life · 登录后进入房间列表</p>
     <form @submit.prevent="onSubmit">
       <div class="field">
         <label for="username">用户名</label>

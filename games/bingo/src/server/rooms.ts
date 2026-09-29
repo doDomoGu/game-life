@@ -1,10 +1,9 @@
-import { randomBytes } from 'node:crypto';
+import { appendRecord, finishRoom } from '@game-life/platform-server';
 import { applyDraw, checkWin, createDrawPool, createRandomBoard } from './engine.js';
 import { BINGO_ITEM_COUNT } from '../items.js';
 import { bingoMeta } from '../meta.js';
 
 export type PlayerRole = 'host' | 'guest';
-export type RoomStatus = 'waiting' | 'playing' | 'finished';
 
 export interface RoomPlayer {
   userId: string;
@@ -14,137 +13,107 @@ export interface RoomPlayer {
   marked: boolean[];
 }
 
-export interface BingoRoom {
+export interface BingoSession {
   code: string;
   hostUserId: string;
-  status: RoomStatus;
   players: RoomPlayer[];
   drawPool: number[];
   drawnItemIds: number[];
   currentItemId: number | null;
   winnerUserId: string | null;
   winnerUsername: string | null;
-  createdAt: number;
+  historySaved: boolean;
+  finished: boolean;
 }
 
-const rooms = new Map<string, BingoRoom>();
+const sessions = new Map<string, BingoSession>();
 
-function randomCode(): string {
-  return randomBytes(3).toString('hex').toUpperCase();
-}
-
-function findRoom(code: string): BingoRoom | undefined {
-  return rooms.get(code.toUpperCase());
-}
-
-export function createRoom(hostUserId: string, hostUsername: string): BingoRoom {
-  let code = randomCode();
-  while (rooms.has(code)) {
-    code = randomCode();
+export function beginSession(
+  code: string,
+  players: Array<{ userId: string; username: string; role: PlayerRole }>,
+) {
+  const host = players.find((p) => p.role === 'host') ?? players[0];
+  if (!host) {
+    throw Object.assign(new Error('房间没有玩家'), { statusCode: 400 });
   }
-  const room: BingoRoom = {
-    code,
-    hostUserId,
-    status: 'waiting',
-    players: [
-      {
-        userId: hostUserId,
-        username: hostUsername,
-        role: 'host',
-        board: createRandomBoard(),
-        marked: Array(BINGO_ITEM_COUNT).fill(false),
-      },
-    ],
-    drawPool: [],
+  sessions.set(code.toUpperCase(), {
+    code: code.toUpperCase(),
+    hostUserId: host.userId,
+    players: players.map((p) => ({
+      ...p,
+      board: createRandomBoard(),
+      marked: Array(BINGO_ITEM_COUNT).fill(false),
+    })),
+    drawPool: createDrawPool(),
     drawnItemIds: [],
     currentItemId: null,
     winnerUserId: null,
     winnerUsername: null,
-    createdAt: Date.now(),
-  };
-  rooms.set(code, room);
-  return room;
-}
-
-export function joinRoom(code: string, userId: string, username: string): BingoRoom {
-  const room = findRoom(code);
-  if (!room) {
-    throw Object.assign(new Error('房间不存在'), { statusCode: 404 });
-  }
-  if (room.status !== 'waiting') {
-    throw Object.assign(new Error('对局已开始或已结束'), { statusCode: 400 });
-  }
-  if (room.players.some((p) => p.userId === userId)) {
-    return room;
-  }
-  if (room.players.length >= bingoMeta.maxPlayers) {
-    throw Object.assign(new Error('房间已满（最多 8 人）'), { statusCode: 400 });
-  }
-  room.players.push({
-    userId,
-    username,
-    role: 'guest',
-    board: createRandomBoard(),
-    marked: Array(BINGO_ITEM_COUNT).fill(false),
+    historySaved: false,
+    finished: false,
   });
-  return room;
 }
 
-export function startRoom(code: string, hostUserId: string): BingoRoom {
-  const room = findRoom(code);
-  if (!room) throw Object.assign(new Error('房间不存在'), { statusCode: 404 });
-  if (room.hostUserId !== hostUserId) {
-    throw Object.assign(new Error('仅房主可以开始游戏'), { statusCode: 403 });
-  }
-  if (room.status !== 'waiting') {
-    throw Object.assign(new Error('对局状态无效'), { statusCode: 400 });
-  }
-  if (room.players.length < bingoMeta.minPlayers) {
-    throw Object.assign(new Error('人数不足'), { statusCode: 400 });
-  }
-  for (const p of room.players) {
-    p.board = createRandomBoard();
-    p.marked = Array(BINGO_ITEM_COUNT).fill(false);
-  }
-  room.drawPool = createDrawPool();
-  room.drawnItemIds = [];
-  room.currentItemId = null;
-  room.winnerUserId = null;
-  room.winnerUsername = null;
-  room.status = 'playing';
-  return room;
+function findSession(code: string): BingoSession | undefined {
+  return sessions.get(code.toUpperCase());
 }
 
-export function drawNext(code: string, hostUserId: string): BingoRoom {
-  const room = findRoom(code);
-  if (!room) throw Object.assign(new Error('房间不存在'), { statusCode: 404 });
-  if (room.hostUserId !== hostUserId) {
+async function saveMatchHistory(session: BingoSession) {
+  const playedAt = new Date().toISOString();
+  await Promise.all(
+    session.players.map((player) => {
+      const opponents = session.players
+        .filter((other) => other.userId !== player.userId)
+        .map((other) => ({ userId: other.userId, username: other.username }));
+      const won = player.userId === session.winnerUserId;
+      return appendRecord({
+        userId: player.userId,
+        gameId: bingoMeta.id,
+        rawScore: won ? 1 : 0,
+        playedAt,
+        meta: {
+          kind: 'bingo',
+          roomCode: session.code,
+          won,
+          opponents,
+        },
+      });
+    }),
+  );
+}
+
+export async function drawNext(code: string, hostUserId: string): Promise<BingoSession> {
+  const session = findSession(code);
+  if (!session) throw Object.assign(new Error('对局不存在'), { statusCode: 404 });
+  if (session.hostUserId !== hostUserId) {
     throw Object.assign(new Error('仅房主可以开奖'), { statusCode: 403 });
   }
-  if (room.status !== 'playing') {
-    throw Object.assign(new Error('对局未进行中'), { statusCode: 400 });
-  }
-  if (room.winnerUserId) {
+  if (session.finished) {
     throw Object.assign(new Error('已有获胜者'), { statusCode: 400 });
   }
-  if (room.drawPool.length === 0) {
+  if (session.drawPool.length === 0) {
     throw Object.assign(new Error('所有图案已揭晓'), { statusCode: 400 });
   }
-  const itemId = room.drawPool.shift()!;
-  room.currentItemId = itemId;
-  room.drawnItemIds.push(itemId);
+  const itemId = session.drawPool.shift()!;
+  session.currentItemId = itemId;
+  session.drawnItemIds.push(itemId);
 
-  for (const player of room.players) {
+  for (const player of session.players) {
     player.marked = applyDraw(player.board, player.marked, itemId);
-    if (!room.winnerUserId && checkWin(player.marked)) {
-      room.winnerUserId = player.userId;
-      room.winnerUsername = player.username;
-      room.status = 'finished';
+    if (!session.winnerUserId && checkWin(player.marked)) {
+      session.winnerUserId = player.userId;
+      session.winnerUsername = player.username;
+      session.finished = true;
     }
   }
-  return room;
+  if (session.finished && !session.historySaved) {
+    await saveMatchHistory(session);
+    session.historySaved = true;
+    finishRoom(session.code, hostUserId);
+  }
+  return session;
 }
 
-export function getRoom(code: string): BingoRoom | undefined {
-  return findRoom(code);
+export function getSession(code: string): BingoSession | undefined {
+  return findSession(code);
 }

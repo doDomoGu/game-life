@@ -6,5 +6,7 @@ export const pokerMemoryServerPlugin: ServerGamePlugin = {
   id: pokerMemoryMeta.id,
   name: pokerMemoryMeta.name,
   description: pokerMemoryMeta.description,
+  minPlayers: 1,
+  maxPlayers: 1,
   validateSubmit: validatePokerMemorySubmit,
 };

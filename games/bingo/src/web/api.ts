@@ -19,23 +19,8 @@ export interface BingoRoomView {
 
 const base = '/games/bingo/rooms';
 
-export async function createBingoRoom() {
-  const { data } = await api.post<BingoRoomView>(base);
-  return data;
-}
-
-export async function joinBingoRoom(code: string) {
-  const { data } = await api.post<BingoRoomView>(`${base}/${encodeURIComponent(code)}/join`);
-  return data;
-}
-
 export async function fetchBingoRoom(code: string) {
   const { data } = await api.get<BingoRoomView>(`${base}/${encodeURIComponent(code)}`);
-  return data;
-}
-
-export async function startBingoRoom(code: string) {
-  const { data } = await api.post<BingoRoomView>(`${base}/${encodeURIComponent(code)}/start`);
   return data;
 }
 

@@ -1,42 +1,80 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
-import type { MyStats } from '@game-life/shared';
-import { fetchMyStats } from '../api/records.js';
-import { listWebGames } from '../games/registry.js';
+import { createRoom, fetchRooms, joinRoom, type RoomView } from '../api/rooms.js';
 import { useAuthStore } from '../stores/auth.js';
 
 const auth = useAuthStore();
 const router = useRouter();
 
-const games = listWebGames();
-const statsByGameId = ref<Record<string, MyStats>>({});
-const loadingStats = ref(true);
+const mine = ref<RoomView | null>(null);
+const waiting = ref<RoomView[]>([]);
+const joinCode = ref('');
+const error = ref('');
+const loading = ref(false);
 
-onMounted(async () => {
-  const entries = await Promise.all(
-    games.map(async (game) => {
-      try {
-        const stats = await fetchMyStats(game.id);
-        return [game.id, stats] as const;
-      } catch {
-        return [game.id, null] as const;
-      }
-    }),
-  );
-  for (const [id, stats] of entries) {
-    if (stats) statsByGameId.value[id] = stats;
-  }
-  loadingStats.value = false;
+async function load() {
+  const data = await fetchRooms();
+  mine.value = data.mine;
+  waiting.value = data.waiting.filter((room) => room.code !== data.mine?.code);
+}
+
+onMounted(() => {
+  load().catch(() => {
+    error.value = '房间列表加载失败';
+  });
 });
 
-function openIntro(introRouteName: string) {
-  router.push({ name: introRouteName });
+function openRoom(code: string) {
+  router.push({ name: 'room', params: { code } });
+}
+
+async function onCreate() {
+  error.value = '';
+  loading.value = true;
+  try {
+    const room = await createRoom();
+    openRoom(room.code);
+  } catch (e: unknown) {
+    error.value = messageOf(e) ?? '创建失败';
+  } finally {
+    loading.value = false;
+  }
+}
+
+async function onJoin(code?: string) {
+  error.value = '';
+  const value = (code ?? joinCode.value).trim().toUpperCase();
+  if (!value) {
+    error.value = '请输入房间号';
+    return;
+  }
+  loading.value = true;
+  try {
+    const room = await joinRoom(value);
+    openRoom(room.code);
+  } catch (e: unknown) {
+    error.value = messageOf(e) ?? '加入失败';
+  } finally {
+    loading.value = false;
+  }
+}
+
+function messageOf(e: unknown) {
+  if (e && typeof e === 'object' && 'response' in e) {
+    return (e as { response?: { data?: { message?: string } } }).response?.data?.message;
+  }
+  return undefined;
 }
 
 function logout() {
   auth.logout();
   router.push({ name: 'login' });
+}
+
+function statusLabel(room: RoomView) {
+  if (!room.gameName) return '未选游戏';
+  return room.gameName;
 }
 </script>
 
@@ -45,32 +83,41 @@ function logout() {
     <header class="lobby__top">
       <div>
         <p class="hello">你好，{{ auth.username }}</p>
-        <h1>游戏大厅</h1>
+        <h1>房间</h1>
       </div>
       <button type="button" class="btn btn--ghost lobby__logout" @click="logout">退出</button>
     </header>
 
-    <p class="sub">选择一款游戏开始</p>
+    <button type="button" class="btn" style="width: 100%; margin-bottom: 16px" :disabled="loading" @click="onCreate">
+      创建房间
+    </button>
 
-    <ul class="game-list">
-      <li v-for="game in games" :key="game.id" class="game-card">
-        <button type="button" class="game-card__main" @click="openIntro(game.introRouteName)">
-          <span class="game-card__cover" aria-hidden="true">{{ game.cover ?? '🎮' }}</span>
-          <span class="game-card__body">
-            <span class="game-card__title">{{ game.name }}</span>
-            <span class="game-card__desc">{{ game.description }}</span>
-          </span>
-          <span class="game-card__go">进入</span>
-        </button>
-        <div v-if="statsByGameId[game.id]" class="game-card__stats">
-          <span>已完成 {{ statsByGameId[game.id].totalGames }} 局</span>
-          <span v-if="statsByGameId[game.id].bestFlipTurns != null">
-            · 最少 {{ statsByGameId[game.id].bestFlipTurns }} 次翻开
-          </span>
-        </div>
-        <p v-else-if="!loadingStats" class="game-card__stats game-card__stats--muted">暂无记录</p>
-      </li>
-    </ul>
+    <div class="join">
+      <input v-model="joinCode" placeholder="输入房间号加入" autocapitalize="characters" />
+      <button type="button" class="btn btn--ghost" :disabled="loading" @click="onJoin()">加入</button>
+    </div>
+    <p v-if="error" class="error">{{ error }}</p>
+
+    <section v-if="mine" class="block">
+      <h2>我的房间</h2>
+      <button type="button" class="room-row" @click="openRoom(mine.code)">
+        <strong>{{ mine.code }}</strong>
+        <span>{{ statusLabel(mine) }} · {{ mine.playerCount }} 人</span>
+      </button>
+    </section>
+
+    <section class="block">
+      <h2>等待中的房间</h2>
+      <p v-if="waiting.length === 0" class="muted">还没有等待中的房间</p>
+      <ul v-else class="list">
+        <li v-for="room in waiting" :key="room.code">
+          <button type="button" class="room-row" @click="onJoin(room.code)">
+            <strong>{{ room.code }}</strong>
+            <span>{{ statusLabel(room) }} · {{ room.playerCount }}{{ room.maxPlayers ? `/${room.maxPlayers}` : '' }} 人</span>
+          </button>
+        </li>
+      </ul>
+    </section>
   </div>
 </template>
 
@@ -80,110 +127,73 @@ function logout() {
   justify-content: space-between;
   align-items: flex-start;
   gap: 12px;
-  margin-bottom: 4px;
+  margin-bottom: 16px;
 }
-
 .hello {
   margin: 0;
   font-size: 14px;
   color: var(--muted);
 }
-
 h1 {
   margin: 4px 0 0;
   font-size: 26px;
 }
-
 .lobby__logout {
   min-height: 40px;
   padding: 0 12px;
-  flex-shrink: 0;
 }
-
-.sub {
-  color: var(--muted);
-  margin: 0 0 20px;
+.join {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.join input {
+  flex: 1;
+  min-height: var(--touch-min);
+  padding: 0 12px;
+  border-radius: var(--radius);
+  border: 1px solid #334155;
+  background: var(--surface);
+  color: var(--text);
+  text-transform: uppercase;
+}
+.block {
+  margin-top: 22px;
+}
+.block h2 {
+  margin: 0 0 10px;
   font-size: 14px;
+  color: var(--muted);
 }
-
-.game-list {
+.list {
   list-style: none;
   margin: 0;
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 8px;
 }
-
-.game-card {
-  background: var(--surface);
-  border-radius: var(--radius);
-  overflow: hidden;
-}
-
-.game-card__main {
+.room-row {
   width: 100%;
   display: flex;
+  justify-content: space-between;
   align-items: center;
-  gap: 14px;
-  padding: 16px;
+  gap: 12px;
+  min-height: var(--touch-min);
+  padding: 12px 14px;
   border: none;
-  background: transparent;
+  border-radius: var(--radius);
+  background: var(--surface);
   color: inherit;
   text-align: left;
   cursor: pointer;
-  min-height: var(--touch-min);
 }
-
-.game-card__cover {
-  font-size: 36px;
-  line-height: 1;
-  flex-shrink: 0;
-  width: 48px;
-  text-align: center;
-}
-
-.game-card__body {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.game-card__title {
-  font-size: 17px;
-  font-weight: 700;
-}
-
-.game-card__desc {
+.room-row span {
+  color: var(--muted);
   font-size: 13px;
-  color: var(--muted);
-  line-height: 1.4;
 }
-
-.game-card__go {
-  flex-shrink: 0;
+.muted {
+  color: var(--muted);
   font-size: 14px;
-  font-weight: 600;
-  color: var(--accent);
-}
-
-.game-card__stats {
-  padding: 0 16px 14px;
-  font-size: 12px;
-  color: var(--muted);
-}
-
-.game-card__stats--muted {
-  padding-top: 0;
-}
-
-@media (min-width: 768px) {
-  .game-list {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 16px;
-  }
 }
 </style>

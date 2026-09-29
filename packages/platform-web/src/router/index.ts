@@ -1,6 +1,6 @@
 import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router';
 import type { WebGamePlugin } from '@game-life/shared';
-import { getWebGameById, resolveWebGameByDirect } from '../games/registry.js';
+import { getWebGameById } from '../games/registry.js';
 import { useAuthStore } from '../stores/auth.js';
 
 const baseRoutes: RouteRecordRaw[] = [
@@ -20,6 +20,12 @@ const baseRoutes: RouteRecordRaw[] = [
     path: '/',
     name: 'lobby',
     component: () => import('../views/LobbyView.vue'),
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/room/:code',
+    name: 'room',
+    component: () => import('../views/RoomView.vue'),
     meta: { requiresAuth: true },
   },
   {
@@ -80,20 +86,7 @@ export function createAppRouter(games: WebGamePlugin[]) {
         return { name: 'lobby' };
       }
     }
-    if (to.name === 'lobby' && typeof to.query.direct === 'string' && to.query.direct) {
-      const game = resolveWebGameByDirect(to.query.direct);
-      if (game) {
-        return { name: game.introRouteName };
-      }
-    }
     if (to.meta.guest && auth.isLoggedIn) {
-      const direct = to.query.direct;
-      if (typeof direct === 'string' && direct) {
-        const game = resolveWebGameByDirect(direct);
-        if (game) {
-          return { name: game.introRouteName };
-        }
-      }
       return { name: 'lobby' };
     }
   });

@@ -7,20 +7,11 @@ export const bingoWebPlugin: WebGamePlugin = {
   id: bingoMeta.id,
   name: bingoMeta.name,
   description: bingoMeta.description,
+  minPlayers: bingoMeta.minPlayers,
+  maxPlayers: bingoMeta.maxPlayers,
   cover: '🎯',
   intro: bingoIntro,
   introRouteName: bingoRoutes.introRouteName,
   introRoutePath: bingoRoutes.introRoutePath,
-  extraRoutes: [
-    {
-      path: bingoRoutes.roomLobbyPath,
-      name: bingoRoutes.roomLobbyRouteName,
-      load: () => import('./web/RoomLobby.vue'),
-    },
-    {
-      path: bingoRoutes.roomPath,
-      name: bingoRoutes.roomRouteName,
-      load: () => import('./web/Room.vue'),
-    },
-  ],
+  loadPlay: () => import('./web/Room.vue'),
 };

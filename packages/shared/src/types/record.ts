@@ -25,6 +25,11 @@ export interface PaginatedRecords {
 export interface MyStats {
   gameId: string;
   totalGames: number;
+  /** 比次数类游戏的个人最佳；对局胜负类游戏为 null */
   bestFlipTurns: number | null;
+  /** 胜负类游戏的获胜次数；其它游戏为 null */
+  wins: number | null;
+  /** 一起玩过的对手用户名（去重） */
+  opponents: string[];
   lastPlayedAt: string | null;
 }

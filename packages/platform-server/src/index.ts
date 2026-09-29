@@ -6,9 +6,12 @@ import { configurePlatformRuntime, getPlatformRuntime } from './config/runtime.j
 import { authRoutes } from './routes/auth.routes.js';
 import { gamesRoutes } from './routes/games.routes.js';
 import { recordsRoutes } from './routes/records.routes.js';
+import { roomRoutes } from './rooms/routes.js';
 
 export type { ServerGamePlugin } from './games/registry.js';
 export { requireAuth } from './middleware/auth.js';
+export { appendRecord } from './storage/record.repository.js';
+export { getRoom, finishRoom } from './rooms/store.js';
 
 export interface CreateServerOptions {
   games: ServerGamePlugin[];
@@ -32,6 +35,7 @@ export async function createServer(options: CreateServerOptions) {
   await app.register(authRoutes);
   await app.register(gamesRoutes);
   await app.register(recordsRoutes);
+  await app.register(roomRoutes);
 
   for (const game of getServerGamePlugins()) {
     if (game.registerHttp) {

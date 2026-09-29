@@ -1,13 +1,14 @@
 import type { FastifyInstance } from 'fastify';
 import type { GameHttpApp } from '@game-life/shared';
+import { getRoom, requireAuth } from '@game-life/platform-server';
 import { BINGO_ITEM_LABELS } from '../items.js';
-import type { BingoRoom, RoomPlayer } from './rooms.js';
-import * as rooms from './rooms.js';
-import { requireAuth } from '@game-life/platform-server';
+import type { BingoSession, RoomPlayer } from './rooms.js';
+import * as sessions from './rooms.js';
+import { bingoMeta } from '../meta.js';
 
 export interface BingoRoomView {
   code: string;
-  status: BingoRoom['status'];
+  status: 'playing' | 'finished';
   hostUserId: string;
   players: Array<{
     userId: string;
@@ -22,22 +23,22 @@ export interface BingoRoomView {
   myMarked: boolean[] | null;
 }
 
-function toView(room: BingoRoom, viewerUserId: string): BingoRoomView {
-  const me = room.players.find((p) => p.userId === viewerUserId);
+function toView(session: BingoSession, viewerUserId: string): BingoRoomView {
+  const me = session.players.find((p) => p.userId === viewerUserId);
   return {
-    code: room.code,
-    status: room.status,
-    hostUserId: room.hostUserId,
-    players: room.players.map((p) => ({
+    code: session.code,
+    status: session.finished ? 'finished' : 'playing',
+    hostUserId: session.hostUserId,
+    players: session.players.map((p) => ({
       userId: p.userId,
       username: p.username,
       role: p.role,
     })),
-    drawnItemIds: room.drawnItemIds,
-    currentItemId: room.currentItemId,
+    drawnItemIds: session.drawnItemIds,
+    currentItemId: session.currentItemId,
     itemLabels: BINGO_ITEM_LABELS,
-    winner: room.winnerUserId
-      ? { userId: room.winnerUserId, username: room.winnerUsername ?? '' }
+    winner: session.winnerUserId
+      ? { userId: session.winnerUserId, username: session.winnerUsername ?? '' }
       : null,
     myBoard: me?.board ?? null,
     myMarked: me?.marked ?? null,
@@ -58,48 +59,21 @@ function handleError(reply: import('fastify').FastifyReply, err: unknown) {
 
 export async function registerBingoRoutes(app: GameHttpApp) {
   const fastify = app as FastifyInstance;
-  fastify.post('/api/games/bingo/rooms', { preHandler: requireAuth }, async (request, reply) => {
-    try {
-      const room = rooms.createRoom(request.user!.id, request.user!.username);
-      return toView(room, request.user!.id);
-    } catch (err) {
-      return handleError(reply, err);
-    }
-  });
-
-  fastify.post<{ Params: { code: string } }>(
-    '/api/games/bingo/rooms/:code/join',
-    { preHandler: requireAuth },
-    async (request, reply) => {
-      try {
-        const room = rooms.joinRoom(request.params.code, request.user!.id, request.user!.username);
-        return toView(room, request.user!.id);
-      } catch (err) {
-        return handleError(reply, err);
-      }
-    },
-  );
 
   fastify.get<{ Params: { code: string } }>(
     '/api/games/bingo/rooms/:code',
     { preHandler: requireAuth },
     async (request, reply) => {
-      const room = rooms.getRoom(request.params.code);
-      if (!room) return reply.code(404).send({ message: '房间不存在' });
-      return toView(room, request.user!.id);
-    },
-  );
-
-  fastify.post<{ Params: { code: string } }>(
-    '/api/games/bingo/rooms/:code/start',
-    { preHandler: requireAuth },
-    async (request, reply) => {
-      try {
-        const room = rooms.startRoom(request.params.code, request.user!.id);
-        return toView(room, request.user!.id);
-      } catch (err) {
-        return handleError(reply, err);
+      const platform = getRoom(request.params.code);
+      if (!platform || platform.gameId !== bingoMeta.id) {
+        return reply.code(404).send({ message: '房间不存在' });
       }
+      if (!platform.players.some((p) => p.userId === request.user!.id)) {
+        return reply.code(403).send({ message: '你不在该房间' });
+      }
+      const session = sessions.getSession(request.params.code);
+      if (!session) return reply.code(404).send({ message: '对局尚未开始' });
+      return toView(session, request.user!.id);
     },
   );
 
@@ -108,8 +82,12 @@ export async function registerBingoRoutes(app: GameHttpApp) {
     { preHandler: requireAuth },
     async (request, reply) => {
       try {
-        const room = rooms.drawNext(request.params.code, request.user!.id);
-        return toView(room, request.user!.id);
+        const platform = getRoom(request.params.code);
+        if (!platform || platform.hostUserId !== request.user!.id) {
+          return reply.code(403).send({ message: '仅房主可以开奖' });
+        }
+        const session = await sessions.drawNext(request.params.code, request.user!.id);
+        return toView(session, request.user!.id);
       } catch (err) {
         return handleError(reply, err);
       }

@@ -3,6 +3,8 @@ export interface GameMeta {
   id: string;
   name: string;
   description: string;
+  minPlayers: number;
+  maxPlayers: number;
 }
 
 /** 由平台在启动时传入的 Fastify 实例（避免 shared 依赖 fastify 包） */
@@ -11,17 +13,27 @@ export type GameHttpApp = {
   post: (...args: unknown[]) => unknown;
 };
 
+export interface RoomStartContext {
+  code: string;
+  hostUserId: string;
+  players: Array<{ userId: string; username: string; role: 'host' | 'guest' }>;
+}
+
 export interface ServerGamePlugin extends GameMeta {
   validateSubmit?(rawScore: number, durationMs?: number): string | null;
   registerHttp?: (app: GameHttpApp) => Promise<void>;
+  /** 房主开始对局时调用（例如发 Bingo 牌） */
+  onStart?(ctx: RoomStartContext): Promise<void> | void;
 }
 
 /** 游戏介绍页（平台模板）文案，由各游戏包配置 */
 export interface GameIntroConfig {
   /** 玩法说明，每条一行 */
   rules: string[];
-  /** 个人最佳 rawScore 的展示标签，如「最少翻开次数」 */
+  /** 个人最佳 rawScore 的展示标签，如「最少翻开次数」或「获胜局数」 */
   bestRecordLabel: string;
+  /** match：按胜负与对手展示；缺省按翻牌次数 */
+  recordStyle?: 'flip-turns' | 'match';
   /** 对局历史页说明，缺省则用 bestRecordLabel */
   historyScoreHint?: string;
   /** 多人房间入口（如 Bingo） */

@@ -7,6 +7,8 @@ export const pokerMemoryWebPlugin: WebGamePlugin = {
   id: pokerMemoryMeta.id,
   name: pokerMemoryMeta.name,
   description: pokerMemoryMeta.description,
+  minPlayers: 1,
+  maxPlayers: 1,
   cover: '🂠',
   intro: pokerMemoryIntro,
   introRouteName: pokerMemoryRoutes.introRouteName,

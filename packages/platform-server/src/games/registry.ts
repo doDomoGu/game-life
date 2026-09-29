@@ -9,7 +9,13 @@ export function registerServerGames(gamePlugins: ServerGamePlugin[]) {
 }
 
 export function listGames(): GameMeta[] {
-  return plugins.map(({ id, name, description }) => ({ id, name, description }));
+  return plugins.map(({ id, name, description, minPlayers, maxPlayers }) => ({
+    id,
+    name,
+    description,
+    minPlayers,
+    maxPlayers,
+  }));
 }
 
 export function getGame(id: string): GameMeta | undefined {
@@ -33,6 +39,10 @@ export function validateSubmit(
 
 export function getServerGamePlugins(): ServerGamePlugin[] {
   return plugins;
+}
+
+export function getServerGame(id: string): ServerGamePlugin | undefined {
+  return plugins.find((g) => g.id === id);
 }
 
 export function getDefaultGameId(): string | undefined {

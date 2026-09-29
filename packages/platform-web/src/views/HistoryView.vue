@@ -2,7 +2,7 @@
 import { computed, onMounted, ref, watch } from 'vue';
 import { RouterLink, useRoute } from 'vue-router';
 import type { GameRecord } from '@game-life/shared';
-import { fetchMyRecords } from '../api/records.js';
+import { fetchMyRecords, fetchMyStats } from '../api/records.js';
 import { getWebGameById } from '../games/registry.js';
 
 const route = useRoute();
@@ -10,8 +10,25 @@ const gameId = computed(() => String(route.params.gameId ?? ''));
 const game = computed(() => getWebGameById(gameId.value));
 
 const items = ref<GameRecord[]>([]);
+const stats = ref<Awaited<ReturnType<typeof fetchMyStats>> | null>(null);
 const loading = ref(true);
 const error = ref('');
+
+function opponentsOf(row: GameRecord) {
+  const list = row.meta?.opponents;
+  if (!Array.isArray(list)) return [];
+  return list
+    .map((item) =>
+      item && typeof item === 'object' && 'username' in item && typeof item.username === 'string'
+        ? item.username
+        : '',
+    )
+    .filter(Boolean);
+}
+
+function isMatchRecord(row: GameRecord) {
+  return typeof row.meta?.won === 'boolean';
+}
 
 function formatTime(iso: string) {
   return new Date(iso).toLocaleString('zh-CN', {
@@ -36,11 +53,16 @@ async function loadRecords() {
   loading.value = true;
   error.value = '';
   try {
-    const data = await fetchMyRecords({ gameId: gameId.value, page: 1 });
+    const [data, summary] = await Promise.all([
+      fetchMyRecords({ gameId: gameId.value, page: 1 }),
+      fetchMyStats(gameId.value),
+    ]);
     items.value = data.items;
+    stats.value = summary;
   } catch {
     error.value = '加载失败';
     items.value = [];
+    stats.value = null;
   } finally {
     loading.value = false;
   }
@@ -71,13 +93,24 @@ watch(gameId, loadRecords);
     <p v-else-if="error" class="error">{{ error }}</p>
     <p v-else-if="items.length === 0" class="muted">还没有记录，先去玩一局吧。</p>
 
-    <ul v-else class="list">
+    <div v-if="game?.intro.recordStyle === 'match' && stats && stats.totalGames > 0" class="summary">
+      <span>共 {{ stats.totalGames }} 局</span>
+      <span>胜 {{ stats.wins ?? 0 }} 局</span>
+      <span v-if="stats.opponents.length">对手：{{ stats.opponents.join('、') }}</span>
+    </div>
+
+    <ul v-if="items.length" class="list">
       <li v-for="row in items" :key="row.id" class="row">
         <div>
-          <span class="score">{{ row.rawScore }} 次</span>
+          <span v-if="isMatchRecord(row)" class="score" :class="{ 'score--loss': row.meta?.won !== true }">
+            {{ row.meta?.won === true ? '胜' : '负' }}
+          </span>
+          <span v-else class="score">{{ row.rawScore }} 次</span>
           <span class="time">{{ formatTime(row.playedAt) }}</span>
+          <p v-if="opponentsOf(row).length" class="with">和 {{ opponentsOf(row).join('、') }}</p>
+          <p v-else-if="isMatchRecord(row)" class="with">单人</p>
         </div>
-        <span class="dur">用时 {{ formatDuration(row.durationMs) }}</span>
+        <span v-if="row.durationMs != null" class="dur">用时 {{ formatDuration(row.durationMs) }}</span>
       </li>
     </ul>
   </div>
@@ -124,11 +157,30 @@ h1 {
   gap: 12px;
 }
 
+.summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+  margin: 0 0 16px;
+  font-size: 14px;
+  color: var(--muted);
+}
+
 .score {
   font-size: 18px;
   font-weight: 700;
-  color: var(--accent);
+  color: #4ade80;
   margin-right: 10px;
+}
+
+.score--loss {
+  color: var(--muted);
+}
+
+.with {
+  margin: 4px 0 0;
+  font-size: 13px;
+  color: var(--muted);
 }
 
 .time {
