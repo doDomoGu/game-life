@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import { ref } from 'vue';
-import { RouterLink, useRouter } from 'vue-router';
+import { RouterLink, useRoute, useRouter } from 'vue-router';
+import { navigateAfterAuth } from '../navigation/afterAuth.js';
 import { useAuthStore } from '../stores/auth.js';
 
 const auth = useAuthStore();
 const router = useRouter();
+const route = useRoute();
 
 const username = ref('');
 const password = ref('');
@@ -16,7 +18,7 @@ async function onSubmit() {
   loading.value = true;
   try {
     await auth.register(username.value.trim(), password.value);
-    await router.replace('/');
+    await navigateAfterAuth(router, route);
   } catch (e: unknown) {
     const msg =
       e && typeof e === 'object' && 'response' in e

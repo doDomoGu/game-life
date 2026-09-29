@@ -3,6 +3,7 @@ import { ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { submitRecord } from '@game-life/platform-web';
 import { POKER_MEMORY_GAME_ID } from '@game-life/game-poker-memory/meta';
+import { pokerMemoryRoutes } from '../routes.js';
 import { usePokerMemory } from './usePokerMemory';
 import { suitColor, suitSymbol } from './deck';
 
@@ -47,8 +48,12 @@ watch(
   },
 );
 
-function goHome() {
-  router.push({ name: 'home' });
+function goIntro() {
+  router.push({ name: pokerMemoryRoutes.introRouteName });
+}
+
+function openHistory() {
+  router.push({ name: 'game-history', params: { gameId: POKER_MEMORY_GAME_ID } });
 }
 
 function playAgain() {
@@ -61,7 +66,7 @@ function playAgain() {
 <template>
   <div class="page play">
     <header class="play__header">
-      <button type="button" class="btn btn--ghost play__back" @click="goHome">返回</button>
+      <button type="button" class="btn btn--ghost play__back" @click="goIntro">返回</button>
       <div class="play__stats">
         <span>翻开次数 <strong>{{ flipTurns }}</strong></span>
         <span>配对 <strong>{{ matchedPairs }}/{{ totalPairs }}</strong></span>
@@ -101,7 +106,7 @@ function playAgain() {
       <p v-if="submitError" class="error">{{ submitError }}</p>
       <div class="result__actions">
         <button type="button" class="btn" @click="playAgain">再玩一局</button>
-        <button type="button" class="btn btn--ghost" @click="router.push({ name: 'history' })">
+        <button type="button" class="btn btn--ghost" @click="openHistory">
           查看历史
         </button>
       </div>

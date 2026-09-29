@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { RouterLink, useRoute, useRouter } from 'vue-router';
+import { navigateAfterAuth } from '../navigation/afterAuth.js';
 import { useAuthStore } from '../stores/auth.js';
 
 const auth = useAuthStore();
@@ -17,8 +18,7 @@ async function onSubmit() {
   loading.value = true;
   try {
     await auth.login(username.value.trim(), password.value);
-    const redirect = (route.query.redirect as string) || '/';
-    await router.replace(redirect);
+    await navigateAfterAuth(router, route);
   } catch (e: unknown) {
     const msg =
       e && typeof e === 'object' && 'response' in e
@@ -34,7 +34,7 @@ async function onSubmit() {
 <template>
   <div class="page">
     <h1>登录</h1>
-    <p class="sub">扑克记忆翻牌 · Game Life</p>
+    <p class="sub">Game Life · 登录后进入游戏大厅</p>
     <form @submit.prevent="onSubmit">
       <div class="field">
         <label for="username">用户名</label>
@@ -57,7 +57,7 @@ async function onSubmit() {
     </form>
     <p class="foot">
       没有账号？
-      <RouterLink to="/register">注册</RouterLink>
+      <RouterLink :to="{ path: '/register', query: route.query }">注册</RouterLink>
     </p>
   </div>
 </template>

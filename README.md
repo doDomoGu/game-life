@@ -177,11 +177,11 @@ game-life/
 
 ### 新增一个小游戏
 
-1. 在 `games/<game-id>/` 新建包：`meta.ts`、`server.ts`、`web.ts`、`src/web/` 玩法 UI。  
+1. 在 `games/<game-id>/` 新建包：`intro.config.ts`、`routes.ts`、`server.ts`、`web.ts`、`src/web/` 玩法 UI。  
 2. 在 `apps/server/src/index.ts` 的 `games: [...]` 中挂上 `server` 插件。  
 3. 在 `apps/web/src/main.ts` 的 `games: [...]` 中挂上 `web` 插件。  
 
-底座（用户、JWT、对局记录 API）无需改动。
+介绍页由底座 **`GameIntroView`** 统一渲染；在 `WebGamePlugin.intro` 里配置 `rules`、`bestRecordLabel` 等即可，不必单独写 Intro 页面。
 
 ---
 

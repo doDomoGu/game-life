@@ -9,9 +9,23 @@ export interface ServerGamePlugin extends GameMeta {
   validateSubmit(rawScore: number, durationMs?: number): string | null;
 }
 
-/** 前端路由用；loadPlay 由各游戏包返回 Vue 组件模块 */
+/** 游戏介绍页（平台模板）文案，由各游戏包配置 */
+export interface GameIntroConfig {
+  /** 玩法说明，每条一行 */
+  rules: string[];
+  /** 个人最佳 rawScore 的展示标签，如「最少翻开次数」 */
+  bestRecordLabel: string;
+  /** 对局历史页说明，缺省则用 bestRecordLabel */
+  historyScoreHint?: string;
+}
+
+/** 前端路由：介绍页（平台模板）→ 对局页；历史为 /game/:gameId/history */
 export interface WebGamePlugin extends GameMeta {
-  routeName: string;
-  routePath: string;
+  cover?: string;
+  intro: GameIntroConfig;
+  introRouteName: string;
+  introRoutePath: string;
+  playRouteName: string;
+  playRoutePath: string;
   loadPlay: () => Promise<unknown>;
 }

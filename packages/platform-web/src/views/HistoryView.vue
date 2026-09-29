@@ -1,7 +1,13 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
+import { RouterLink, useRoute } from 'vue-router';
 import type { GameRecord } from '@game-life/shared';
 import { fetchMyRecords } from '../api/records.js';
+import { getWebGameById } from '../games/registry.js';
+
+const route = useRoute();
+const gameId = computed(() => String(route.params.gameId ?? ''));
+const game = computed(() => getWebGameById(gameId.value));
 
 const items = ref<GameRecord[]>([]);
 const loading = ref(true);
@@ -25,25 +31,41 @@ function formatDuration(ms?: number) {
   return `${m} 分 ${s} 秒`;
 }
 
-onMounted(async () => {
+async function loadRecords() {
+  if (!gameId.value) return;
+  loading.value = true;
+  error.value = '';
   try {
-    const data = await fetchMyRecords({ page: 1 });
+    const data = await fetchMyRecords({ gameId: gameId.value, page: 1 });
     items.value = data.items;
   } catch {
     error.value = '加载失败';
+    items.value = [];
   } finally {
     loading.value = false;
   }
-});
+}
+
+onMounted(loadRecords);
+watch(gameId, loadRecords);
 </script>
 
 <template>
   <div class="page">
     <header class="head">
-      <RouterLink to="/" class="back">← 首页</RouterLink>
+      <RouterLink
+        v-if="game"
+        :to="game.introRoutePath"
+        class="back"
+      >
+        ← {{ game.name }}
+      </RouterLink>
+      <RouterLink v-else to="/" class="back">← 游戏大厅</RouterLink>
       <h1>对局历史</h1>
     </header>
-    <p class="sub">每局记录的翻开次数（越少越好）</p>
+    <p v-if="game" class="sub">
+      {{ game.name }} · {{ game.intro.historyScoreHint ?? game.intro.bestRecordLabel }}
+    </p>
 
     <p v-if="loading" class="muted">加载中…</p>
     <p v-else-if="error" class="error">{{ error }}</p>
