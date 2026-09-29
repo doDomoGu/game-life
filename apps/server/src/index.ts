@@ -1,22 +1,16 @@
-import Fastify from 'fastify';
-import cors from '@fastify/cors';
-import { env } from './config/env.js';
-import { authRoutes } from './routes/auth.routes.js';
-import { gamesRoutes } from './routes/games.routes.js';
-import { recordsRoutes } from './routes/records.routes.js';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { createServer } from '@game-life/platform-server';
+import { pokerMemoryServerPlugin } from '@game-life/game-poker-memory/server';
 
-const app = Fastify({ logger: true });
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const dataDir = process.env.DATA_DIR
+  ? path.resolve(process.env.DATA_DIR)
+  : path.resolve(__dirname, '../data');
 
-await app.register(cors, { origin: true });
-await app.register(authRoutes);
-await app.register(gamesRoutes);
-await app.register(recordsRoutes);
-
-app.get('/api/health', async () => ({ ok: true }));
-
-try {
-  await app.listen({ port: env.port, host: '0.0.0.0' });
-} catch (err) {
-  app.log.error(err);
-  process.exit(1);
-}
+await createServer({
+  games: [pokerMemoryServerPlugin],
+  dataDir,
+  jwtSecret: process.env.JWT_SECRET,
+  port: process.env.PORT ? Number(process.env.PORT) : undefined,
+});

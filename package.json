@@ -3,10 +3,11 @@
   "private": true,
   "scripts": {
     "dev": "pnpm -r --parallel dev",
+    "dev:lan": "pnpm --parallel --filter @game-life/server --filter @game-life/web dev:lan",
     "dev:web": "pnpm --filter @game-life/web dev",
     "dev:server": "pnpm --filter @game-life/server dev",
     "build": "pnpm -r build",
-    "typecheck": "pnpm -r typecheck"
+    "typecheck": "pnpm -r --filter @game-life/shared --filter @game-life/platform-server --filter @game-life/platform-web --filter @game-life/web --filter @game-life/server typecheck"
   },
   "engines": {
     "node": ">=20.11.0"

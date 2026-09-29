@@ -154,101 +154,34 @@ data/
 
 ---
 
-## 代码目录结构（推荐 Monorepo）
+## 代码目录结构（底座 + 独立游戏）
 
 ```
 game-life/
-├── README.md
-├── package.json                 # 根 scripts + pnpm workspace
-├── pnpm-workspace.yaml
+├── apps/
+│   ├── web/src/main.ts          # 壳：注册要上线的游戏插件
+│   └── server/src/index.ts      # 壳：createServer + data 目录
 │
 ├── packages/
-│   └── shared/                  # 前后端共享
-│       ├── package.json
-│       └── src/
-│           ├── types/           # User, GameRecord, API DTO
-│           ├── constants/       # gameId 枚举、错误码
-│           └── validators/      # 可选：zod  schema 与后端共用
+│   ├── shared/                  # 用户、对局、鉴权 DTO；游戏插件接口
+│   ├── platform-web/            # 登录/首页/历史、API、路由、样式
+│   └── platform-server/       # 鉴权、对局存储、REST、游戏注册表
 │
-├── apps/
-│   ├── web/                     # Vue 前端
-│   │   ├── index.html
-│   │   ├── vite.config.ts
-│   │   ├── src/
-│   │   │   ├── main.ts
-│   │   │   ├── App.vue
-│   │   │   ├── router/
-│   │   │   │   └── index.ts     # 登录守卫、游戏懒加载路由
-│   │   │   ├── stores/
-│   │   │   │   ├── auth.ts
-│   │   │   │   └── user.ts
-│   │   │   ├── api/
-│   │   │   │   ├── client.ts    # axios/fetch；拦截器设置 Authorization: Bearer
-│   │   │   │   ├── auth.ts
-│   │   │   │   ├── games.ts
-│   │   │   │   └── records.ts
-│   │   │   ├── layouts/
-│   │   │   │   ├── MobileLayout.vue
-│   │   │   │   └── GameShell.vue  # 游戏页共用壳：返回、积分、暂停
-│   │   │   ├── views/
-│   │   │   │   ├── HomeView.vue       # 首期：入口 / 开始游戏（二期扩展为大厅）
-│   │   │   │   ├── LoginView.vue
-│   │   │   │   ├── RegisterView.vue
-│   │   │   │   ├── ProfileView.vue    # 可选：账号信息
-│   │   │   │   └── HistoryView.vue    # 对局列表 + 简单个人统计
-│   │   │   ├── games/                 # 各小游戏独立目录（插件化）
-│   │   │   │   ├── registry.ts        # gameId → 路由、封面、组件
-│   │   │   │   └── <first-game>/      # 首期仅一个目录
-│   │   │   │       ├── index.ts
-│   │   │   │       ├── Play.vue
-│   │   │   │       └── logic.ts
-│   │   │   ├── components/            # 通用 UI：TabBar、ScoreChip、Empty
-│   │   │   ├── composables/           # useAuth、useGameSubmit、useBreakpoint
-│   │   │   └── styles/
-│   │   │       ├── variables.css      # 断点、间距、主题色
-│   │   │       └── mobile.css
-│   │   └── public/
-│   │
-│   └── server/                  # Node API
-│       ├── package.json
-│       ├── src/
-│       │   ├── index.ts         # 启动、挂载路由、静态资源（生产可托管 web dist）
-│       │   ├── config/
-│       │   │   └── env.ts       # DATA_DIR、JWT_SECRET、PORT
-│       │   ├── middleware/
-│       │   │   ├── auth.ts
-│       │   │   └── errorHandler.ts
-│       │   ├── routes/
-│       │   │   ├── auth.routes.ts
-│       │   │   ├── games.routes.ts
-│       │   │   └── records.routes.ts
-│       │   ├── services/
-│       │   │   ├── auth.service.ts
-│       │   │   └── record.service.ts
-│       │   ├── games/
-│       │   │   ├── registry.ts          # 首期一条；validate 提交成绩
-│       │   │   └── <first-game>/
-│       │   │       └── rules.ts
-│       │   └── storage/
-│       │       ├── fileStore.ts         # 原子读写、锁
-│       │       ├── user.repository.ts
-│       │       └── record.repository.ts
-│       └── data/                # 运行时数据（gitignore，仅保留 .gitkeep）
-│           └── .gitkeep
-│
-└── docs/
-    └── games/                   # 各游戏规则说明（可选，给产品/开发看）
+└── games/
+    └── poker-memory/            # 独立游戏包（元数据 + 前端玩法 + 服务端校验）
+        ├── src/meta.ts
+        ├── src/server.ts        # ServerGamePlugin
+        ├── src/web.ts           # WebGamePlugin
+        └── src/web/Play.vue …
 ```
 
-### 新增一个小游戏的流程（约定）
+### 新增一个小游戏
 
-1. 在 `packages/shared` 中补充 `gameId` 与 DTO（若有新字段）。  
-2. 在 `apps/server/src/games/<id>/rules.ts` 实现校验与积分。  
-3. 在 `apps/server/src/games/registry.ts` 注册。  
-4. 在 `apps/web/src/games/<id>/` 实现玩法 UI，并在 `games/registry.ts` 注册路由与大厅卡片。  
-5. 在 `docs/games/<id>.md` 写规则与计分说明（可选）。
+1. 在 `games/<game-id>/` 新建包：`meta.ts`、`server.ts`、`web.ts`、`src/web/` 玩法 UI。  
+2. 在 `apps/server/src/index.ts` 的 `games: [...]` 中挂上 `server` 插件。  
+3. 在 `apps/web/src/main.ts` 的 `games: [...]` 中挂上 `web` 插件。  
 
-首期完成后，加第二款游戏只需扩展注册表与 `games/` 目录；加排行榜时再增路由与页面，**records 表结构不用改**。
+底座（用户、JWT、对局记录 API）无需改动。
 
 ---
 
@@ -268,6 +201,15 @@ pnpm dev              # 同时启动 API :3000 与 Web :5173
 ```
 
 浏览器打开 `http://localhost:5173`，注册登录后「开始游戏」。
+
+**手机同 WiFi 访问**（API 仍走本机 3000，由 Vite 代理 `/api`）：
+
+```bash
+pnpm dev:lan
+# 或：npx pnpm@9 dev:lan
+```
+
+终端会打印 `Network: http://192.168.x.x:5173`，手机浏览器打开该地址即可。本机 IP 也可执行：`ipconfig getifaddr en0`（macOS WiFi 多为 `en0`）。
 
 前端使用 **Vite 5**（兼容 Node 20.11.x；Vite 7 需 Node 20.19+）。
 

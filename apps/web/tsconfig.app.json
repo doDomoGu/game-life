@@ -16,8 +16,10 @@
     "noFallthroughCasesInSwitch": true,
     "jsx": "preserve",
     "paths": {
-      "@/*": ["./src/*"]
+      "@game-life/platform-web": ["../../packages/platform-web/src/index.ts"],
+      "@game-life/platform-web/*": ["../../packages/platform-web/src/*"],
+      "@game-life/game-poker-memory/*": ["../../games/poker-memory/src/*"]
     }
   },
-  "include": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.vue"]
+  "include": ["src/**/*.ts"]
 }

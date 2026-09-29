@@ -5,21 +5,17 @@
   "type": "module",
   "scripts": {
     "dev": "tsx watch src/index.ts",
+    "dev:lan": "tsx watch src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@game-life/shared": "workspace:*",
-    "@fastify/cors": "^11.0.1",
-    "bcryptjs": "^3.0.2",
-    "fastify": "^5.6.0",
-    "jsonwebtoken": "^9.0.2",
-    "uuid": "^11.1.0"
+    "@game-life/game-poker-memory": "workspace:*",
+    "@game-life/platform-server": "workspace:*",
+    "@game-life/shared": "workspace:*"
   },
   "devDependencies": {
-    "@types/bcryptjs": "^3.0.0",
-    "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^24.3.1",
     "tsx": "^4.20.5",
     "typescript": "^5.9.2"
