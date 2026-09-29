@@ -1,0 +1,106 @@
+packages/platform-server/src/index.ts
+  s_eda959129b187d::t_2fce9f600457c7 9
+  s_eda959129b187d::t_3bcf9de4790543 13
+  s_eda959129b187d::t_93bdd6c854739e 38
+  s_eda959129b187d::t_e2ad67c0fa1bf5 14
+packages/platform-web/src/views/GameIntroView.vue
+  s_eda959129b187d::t_cd51c022683809 70-72,75-77
+  s_eda959129b187d::t_d0f24eefc21369 80-82
+  s_eda959129b187d::t_7bd457bd3a645b 166-171
+  s_eda959129b187d::t_50ef81fe1cc328 178-184
+games/poker-memory/src/server.ts
+  s_eda959129b187d::t_257166b8b513b8 9-10
+packages/platform-web/src/router/index.ts
+  s_eda959129b187d::t_d6d3d7ab6597df 26-30
+  s_eda959129b187d::t_d1a8176dfaecbb 3
+games/bingo/src/intro.config.ts
+  s_eda959129b187d::t_1dd43e43e87bdb 12-13
+packages/shared/src/types/record.ts
+  s_eda959129b187d::t_7d428a55a5eb48 28,30-33
+games/poker-memory/src/web/Play.vue
+  s_eda959129b187d::t_87a46a808d63dd 84-86
+  s_eda959129b187d::t_2eb2ebe9e36466 11
+  s_eda959129b187d::t_b950499138dd3f 55-58
+  s_eda959129b187d::t_689c92337e044d 20
+  s_eda959129b187d::t_e8058e656692b5 158,162-166
+  s_eda959129b187d::t_b2b43e02525563 2,4
+  s_eda959129b187d::t_81b3c1ee625ee4 117
+packages/platform-web/src/views/LoginView.vue
+  s_eda959129b187d::t_f61a1e3a1ca426 37
+games/bingo/src/web/Room.vue
+  s_eda959129b187d::t_a6efb05fe168cc 94
+  s_eda959129b187d::t_f13325cced2a8a 3,6
+packages/platform-server/src/rooms/store.ts
+  s_eda959129b187d::t_450e70438b7d0d 1-122,124-166,168-169,172-180
+  s_eda959129b187d::t_d2635c64a7238a 167,170-171
+  s_eda959129b187d::t_4b83fe20859f4a 123
+packages/platform-web/src/views/LobbyView.vue
+  s_eda959129b187d::t_f78fe2a0ff3a65 4,10-18,20-25,28-67,74-78,86,91-120,130,145-164,166,168,174,176,179,181-183,185-186,191,193,195,197
+  s_eda959129b187d::t_b91e5717fa3098 19
+games/bingo/src/server/routes.ts
+  s_eda959129b187d::t_2e0cf729c20c42 3,5-7,11,26-27,29-32,37-38,40-41,67-72,74-76,85-90
+packages/platform-web/src/room/playKey.ts
+  s_eda959129b187d::t_a69bea546c9e63 1-6
+packages/platform-server/src/rooms/routes.ts
+  s_eda959129b187d::t_ad892b6d6fd77c 1-137
+packages/platform-web/src/views/RoomView.vue
+  s_eda959129b187d::t_e52ee1a2f88811 221-222,224,227-228
+  s_eda959129b187d::t_94eb68c06bd81c 1-7,9-55,57-73,83-97,103,108-134,145,162,164,171-220,223,225-226,229-234
+  s_eda959129b187d::t_4baa8470a47a08 98-101,104-107
+  s_eda959129b187d::t_a0a32fc9e7c1e2 74-82
+  s_eda959129b187d::t_0ea08579def31d 102
+  s_eda959129b187d::t_3c74edecfeec55 56
+  s_eda959129b187d::t_c9c72689518a1a 135-144,146-161,163,165-170
+  s_eda959129b187d::t_bc632f5c7254b0 8
+packages/platform-server/src/games/registry.ts
+  s_eda959129b187d::t_c1826866359654 12-18
+  s_eda959129b187d::t_355c59dabc9370 44-47
+games/bingo/src/web.ts
+  s_eda959129b187d::t_41003b2da4cd2a 16
+  s_eda959129b187d::t_acae4ea7fd2cdc 10-11
+games/poker-memory/src/web.ts
+  s_eda959129b187d::t_5f284e572025c8 10-11
+packages/platform-web/src/views/HistoryView.vue
+  s_eda959129b187d::t_899a6d74471338 5
+  s_eda959129b187d::t_e835c0d84ce794 65,96-102,105-108,110-111,113
+  s_eda959129b187d::t_0bd89f5258f494 160-168,172,176-183
+  s_eda959129b187d::t_b32e5775b01497 13,17-31
+  s_eda959129b187d::t_952c60d1dfd6f8 56-59,61
+games/poker-memory/src/web/usePokerMemory.ts
+  s_eda959129b187d::t_d61ed07e619a34 119
+  s_eda959129b187d::t_ea56bcbf312d66 94-107
+games/bingo/src/server.ts
+  s_eda959129b187d::t_e1a0dcdadd3bcf 3,10-11,13-15
+packages/shared/src/types/game.ts
+  s_eda959129b187d::t_f61c53d19aca45 16-21,25-26
+  s_eda959129b187d::t_56016cd971d724 33,35-36
+  s_eda959129b187d::t_6359171ba9b36e 6-7
+packages/platform-web/src/index.ts
+  s_eda959129b187d::t_fa75aea39638c5 14
+packages/platform-server/src/services/record.service.ts
+  s_eda959129b187d::t_e3afbb3bd0540e 37-44,52-59,61-79,84-85
+packages/platform-web/src/api/rooms.ts
+  s_eda959129b187d::t_6eccec37418536 1-63
+games/bingo/src/server/rooms.ts
+  s_eda959129b187d::t_f177ce44be2694 25
+  s_eda959129b187d::t_6c87044a4cecde 113
+  s_eda959129b187d::t_45debba75e7dfa 52
+  s_eda959129b187d::t_5a8721f0b38969 62-63,66-67,69-75,77-82
+  s_eda959129b187d::t_0e34c021238662 1,16,26,29,31-37,39-47,53-54,57-58,61,64-65,68,76,85-88,91,94,97-99,101,103-106,109-112,114,117-118
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.45-trip",
+  "base_commit_sha": "54f3114ee674cbebb1d9331b72e8a1ec6e04cb0c",
+  "prompts": {},
+  "sessions": {
+    "s_eda959129b187d": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "6243fa1d-7e87-4104-bd6a-7a4c8e21dc8d",
+        "model": "grok-4.7"
+      },
+      "human_author": "gulingjun <gulingjun@trip.com>"
+    }
+  }
+}
