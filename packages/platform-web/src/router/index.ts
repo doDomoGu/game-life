@@ -31,20 +31,35 @@ const baseRoutes: RouteRecordRaw[] = [
 ];
 
 export function createAppRouter(games: WebGamePlugin[]) {
-  const gameRoutes: RouteRecordRaw[] = games.flatMap((game) => [
-    {
-      path: game.introRoutePath,
-      name: game.introRouteName,
-      component: () => import('../views/GameIntroView.vue'),
-      meta: { requiresAuth: true, gameId: game.id },
-    },
-    {
-      path: game.playRoutePath,
-      name: game.playRouteName,
-      component: game.loadPlay,
-      meta: { requiresAuth: true, gameId: game.id },
-    },
-  ]);
+  const gameRoutes: RouteRecordRaw[] = games.flatMap((game) => {
+    const routes: RouteRecordRaw[] = [
+      {
+        path: game.introRoutePath,
+        name: game.introRouteName,
+        component: () => import('../views/GameIntroView.vue'),
+        meta: { requiresAuth: true, gameId: game.id },
+      },
+    ];
+    if (game.loadPlay && game.playRoutePath && game.playRouteName) {
+      routes.push({
+        path: game.playRoutePath,
+        name: game.playRouteName,
+        component: game.loadPlay,
+        meta: { requiresAuth: true, gameId: game.id },
+      });
+    }
+    if (game.extraRoutes) {
+      for (const extra of game.extraRoutes) {
+        routes.push({
+          path: extra.path,
+          name: extra.name,
+          component: extra.load,
+          meta: { requiresAuth: true, gameId: game.id },
+        });
+      }
+    }
+    return routes;
+  });
 
   const router = createRouter({
     history: createWebHistory(),

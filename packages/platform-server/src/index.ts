@@ -1,13 +1,14 @@
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
 import type { ServerGamePlugin } from './games/registry.js';
-import { registerServerGames } from './games/registry.js';
+import { registerServerGames, getServerGamePlugins } from './games/registry.js';
 import { configurePlatformRuntime, getPlatformRuntime } from './config/runtime.js';
 import { authRoutes } from './routes/auth.routes.js';
 import { gamesRoutes } from './routes/games.routes.js';
 import { recordsRoutes } from './routes/records.routes.js';
 
 export type { ServerGamePlugin } from './games/registry.js';
+export { requireAuth } from './middleware/auth.js';
 
 export interface CreateServerOptions {
   games: ServerGamePlugin[];
@@ -31,6 +32,12 @@ export async function createServer(options: CreateServerOptions) {
   await app.register(authRoutes);
   await app.register(gamesRoutes);
   await app.register(recordsRoutes);
+
+  for (const game of getServerGamePlugins()) {
+    if (game.registerHttp) {
+      await game.registerHttp(app as import('@game-life/shared').GameHttpApp);
+    }
+  }
 
   app.get('/api/health', async () => ({ ok: true }));
 

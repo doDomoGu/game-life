@@ -1,0 +1,30 @@
+/** 25 种图案（与格子一一对应） */
+export const BINGO_ITEM_LABELS = [
+  '🍎',
+  '🍋',
+  '🍇',
+  '🍒',
+  '🍑',
+  '🥝',
+  '🍉',
+  '🍊',
+  '🍌',
+  '🫐',
+  '🍓',
+  '🥭',
+  '🍐',
+  '🍈',
+  '🥥',
+  '🌽',
+  '🥕',
+  '🍞',
+  '🧀',
+  '🍳',
+  '🍩',
+  '🍪',
+  '☕',
+  '🧁',
+  '🎈',
+] as const;
+
+export const BINGO_ITEM_COUNT = BINGO_ITEM_LABELS.length;

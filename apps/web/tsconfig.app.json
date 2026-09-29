@@ -18,6 +18,7 @@
     "paths": {
       "@game-life/platform-web": ["../../packages/platform-web/src/index.ts"],
       "@game-life/platform-web/*": ["../../packages/platform-web/src/*"],
+      "@game-life/game-bingo/*": ["../../games/bingo/src/*"],
       "@game-life/game-poker-memory/*": ["../../games/poker-memory/src/*"]
     }
   },

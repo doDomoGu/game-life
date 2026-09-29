@@ -35,7 +35,12 @@ watch(gameId, loadStats);
 
 function startPlay() {
   const g = game.value;
-  if (g) router.push({ name: g.playRouteName });
+  if (g?.loadPlay && g.playRouteName) router.push({ name: g.playRouteName });
+}
+
+function openRoomLobby() {
+  const name = game.value?.intro.roomLobbyRouteName;
+  if (name) router.push({ name });
 }
 
 function openHistory() {
@@ -77,8 +82,31 @@ function openHistory() {
     </div>
     <p v-else-if="!loadingStats" class="stats-empty">暂无对局记录</p>
 
-    <button type="button" class="btn start" @click="startPlay">开始游戏</button>
-    <button type="button" class="btn btn--ghost history-btn" @click="openHistory">
+    <button
+      v-if="game.intro.roomLobbyRouteName"
+      type="button"
+      class="btn start"
+      @click="openRoomLobby"
+    >
+      {{ game.intro.roomLobbyLabel ?? '创建 / 加入房间' }}
+    </button>
+    <button v-if="game.loadPlay" type="button" class="btn" :class="{ start: !game.intro.roomLobbyRouteName }" @click="startPlay">
+      开始游戏
+    </button>
+    <button
+      v-if="game.intro.bestRecordLabel && !game.intro.roomLobbyRouteName"
+      type="button"
+      class="btn btn--ghost history-btn"
+      @click="openHistory"
+    >
+      对局历史
+    </button>
+    <button
+      v-else-if="game.intro.roomLobbyRouteName && game.intro.bestRecordLabel"
+      type="button"
+      class="btn btn--ghost history-btn"
+      @click="openHistory"
+    >
       对局历史
     </button>
   </div>

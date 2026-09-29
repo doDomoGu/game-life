@@ -25,7 +25,14 @@ export function validateSubmit(
   if (!game) {
     return '未知游戏';
   }
+  if (!game.validateSubmit) {
+    return '该游戏不支持提交单局成绩';
+  }
   return game.validateSubmit(rawScore, durationMs);
+}
+
+export function getServerGamePlugins(): ServerGamePlugin[] {
+  return plugins;
 }
 
 export function getDefaultGameId(): string | undefined {

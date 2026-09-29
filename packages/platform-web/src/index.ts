@@ -9,6 +9,8 @@ import './styles/mobile.css';
 export type { WebGamePlugin } from '@game-life/shared';
 
 export { submitRecord, fetchMyRecords, fetchMyStats } from './api/records.js';
+export { api } from './api/client.js';
+export { useAuthStore } from './stores/auth.js';
 
 export interface CreatePlatformAppOptions {
   games: WebGamePlugin[];

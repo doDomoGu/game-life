@@ -10,6 +10,9 @@ importers:
 
   apps/server:
     dependencies:
+      '@game-life/game-bingo':
+        specifier: workspace:*
+        version: link:../../games/bingo
       '@game-life/game-poker-memory':
         specifier: workspace:*
         version: link:../../games/poker-memory
@@ -32,6 +35,9 @@ importers:
 
   apps/web:
     dependencies:
+      '@game-life/game-bingo':
+        specifier: workspace:*
+        version: link:../../games/bingo
       '@game-life/game-poker-memory':
         specifier: workspace:*
         version: link:../../games/poker-memory
@@ -69,6 +75,27 @@ importers:
       vue-tsc:
         specifier: ^2.2.12
         version: 2.2.12(typescript@5.9.3)
+
+  games/bingo:
+    dependencies:
+      '@game-life/platform-server':
+        specifier: workspace:*
+        version: link:../../packages/platform-server
+      '@game-life/shared':
+        specifier: workspace:*
+        version: link:../../packages/shared
+      axios:
+        specifier: ^1.11.0
+        version: 1.20.0
+      fastify:
+        specifier: ^5.6.0
+        version: 5.12.5
+      vue:
+        specifier: ^3.5.0
+        version: 3.5.43(typescript@5.9.3)
+      vue-router:
+        specifier: ^4.5.0
+        version: 4.6.4(vue@3.5.43(typescript@5.9.3))
 
   games/poker-memory:
     dependencies:
