@@ -1,0 +1,95 @@
+packages/platform-web/src/views/HistoryView.vue
+  s_b37bb4586d1548::t_0c2a20f2d874a7 105-106
+games/hanabi/src/view.ts
+  s_b37bb4586d1548::t_c341af2d1a497b 19
+  s_b37bb4586d1548::t_08de483fb0368d 1-18,20-45
+games/hanabi/src/server/engine.ts
+  s_b37bb4586d1548::t_0eb1d2fa6dea16 1-2
+  s_b37bb4586d1548::t_c741a7875325ca 3-342
+games/hanabi/src/server/routes.ts
+  s_b37bb4586d1548::t_c1a3484b08557e 154-157
+  s_b37bb4586d1548::t_54979ab1a01c7a 5
+  s_b37bb4586d1548::t_562f403a96d891 1-4,6-153,158-192
+apps/server/package.json
+  s_b37bb4586d1548::t_84b32305b68396 16
+games/hanabi/src/server/rooms.ts
+  s_b37bb4586d1548::t_3d10e6d9302f1b 1-7,11-48,50-54,56-207,215-221,232
+  s_b37bb4586d1548::t_5f64d13893af79 49,55
+  s_b37bb4586d1548::t_3a327a42da35f1 208-214,222-226,231
+  s_b37bb4586d1548::t_8911890f87283b 227-230
+  s_b37bb4586d1548::t_2861a988c556b0 8-10
+games/hanabi/src/meta.ts
+  s_b37bb4586d1548::t_51a9f00dd4c6a3 1-9
+apps/web/tsconfig.app.json
+  s_b37bb4586d1548::t_a42c735e0b33ee 22
+packages/platform-web/src/views/GameIntroView.vue
+  s_b37bb4586d1548::t_8d98bd1afa7d66 71-75
+apps/web/vite.config.ts
+  s_b37bb4586d1548::t_28578eebbc667e 16
+  s_b37bb4586d1548::t_04a26653eb4d2c 33
+packages/platform-server/package.json
+  s_b37bb4586d1548::t_b57c95f2609a05 17
+packages/platform-server/src/services/auth.service.ts
+  s_b37bb4586d1548::t_06e43e60f5e272 60-68
+apps/web/src/main.ts
+  s_b37bb4586d1548::t_61a9531c242af9 3,7
+games/hanabi/package.json
+  s_b37bb4586d1548::t_eda005f61e0b95 1-21
+packages/platform-server/src/services/record.service.ts
+  s_b37bb4586d1548::t_86f91414448d8a 82,87
+  s_b37bb4586d1548::t_3489fd81117476 41
+  s_b37bb4586d1548::t_cf704476eb5908 57
+games/hanabi/src/web/labels.ts
+  s_b37bb4586d1548::t_f0c4feccad1931 1-12
+games/hanabi/src/web/HanabiCard.vue
+  s_b37bb4586d1548::t_c7cba5a0df7d39 1-141
+apps/server/src/index.ts
+  s_b37bb4586d1548::t_543492f6e0c893 18
+  s_b37bb4586d1548::t_833cf87ec15915 6
+packages/platform-server/src/storage/record.repository.ts
+  s_b37bb4586d1548::t_afe41beb08b914 11-14,17-30,32-35
+games/hanabi/src/colors.ts
+  s_b37bb4586d1548::t_7a15417f42f113 1-11
+games/hanabi/src/web/api.ts
+  s_b37bb4586d1548::t_9e47d2684e6b5c 1-27
+games/hanabi/src/web/Game.vue
+  s_b37bb4586d1548::t_8afe4c10612100 16
+  s_b37bb4586d1548::t_5f8c5421308d90 1-2,4-15,17-244,246-696
+  s_b37bb4586d1548::t_41e13fc0b5cae0 3
+  s_b37bb4586d1548::t_a7f5204d172373 245
+packages/shared/src/types/game.ts
+  s_b37bb4586d1548::t_b2d376716dff3e 35-36
+games/hanabi/src/routes.ts
+  s_b37bb4586d1548::t_a69de760b70c72 1-4
+packages/shared/src/types/record.ts
+  s_b37bb4586d1548::t_e6d939fe79352b 30-31
+games/hanabi/src/intro.config.ts
+  s_b37bb4586d1548::t_d616f8e5be1b80 1-15
+apps/web/package.json
+  s_b37bb4586d1548::t_2e88f9da55e812 15
+games/hanabi/src/web/socket.ts
+  s_b37bb4586d1548::t_f6f57b98d6957c 1-94
+games/hanabi/src/server.ts
+  s_b37bb4586d1548::t_ed8e22dfd01edd 1-16
+packages/platform-server/src/index.ts
+  s_b37bb4586d1548::t_2e1504de751668 6,17,19
+  s_b37bb4586d1548::t_dc95d906b06f67 42-43
+games/hanabi/src/web.ts
+  s_b37bb4586d1548::t_27ce365e5ac97c 1-17
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.51-trip",
+  "base_commit_sha": "e98e133b283453191755f2784c6785238f704127",
+  "prompts": {},
+  "sessions": {
+    "s_b37bb4586d1548": {
+      "agent_id": {
+        "tool": "chengxiaobang",
+        "id": "s_dzyh253wj1v3",
+        "model": "auto(free)"
+      },
+      "human_author": "gulingjun <gulingjun@trip.com>"
+    }
+  }
+}
