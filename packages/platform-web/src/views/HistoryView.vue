@@ -102,7 +102,8 @@ watch(gameId, loadRecords);
     <ul v-if="items.length" class="list">
       <li v-for="row in items" :key="row.id" class="row">
         <div>
-          <span v-if="isMatchRecord(row)" class="score" :class="{ 'score--loss': row.meta?.won !== true }">
+          <span v-if="game?.intro.recordStyle === 'score'" class="score">{{ row.rawScore }} 分</span>
+          <span v-else-if="isMatchRecord(row)" class="score" :class="{ 'score--loss': row.meta?.won !== true }">
             {{ row.meta?.won === true ? '胜' : '负' }}
           </span>
           <span v-else class="score">{{ row.rawScore }} 次</span>

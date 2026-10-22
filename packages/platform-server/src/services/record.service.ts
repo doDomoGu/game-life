@@ -38,6 +38,7 @@ export async function getMyStats(userId: string, gameId?: string): Promise<MySta
       gameId: '',
       totalGames: 0,
       bestFlipTurns: null,
+      bestScore: null,
       wins: null,
       opponents: [],
       lastPlayedAt: null,
@@ -53,6 +54,7 @@ export async function getMyStats(userId: string, gameId?: string): Promise<MySta
       gameId: resolvedGameId,
       totalGames: 0,
       bestFlipTurns: null,
+      bestScore: null,
       wins: null,
       opponents: [],
       lastPlayedAt: null,
@@ -77,10 +79,12 @@ export async function getMyStats(userId: string, gameId?: string): Promise<MySta
     }
   }
   const bestFlipTurns = wins == null ? Math.min(...items.map((r) => r.rawScore)) : null;
+  const bestScore = wins == null ? Math.max(...items.map((r) => r.rawScore)) : null;
   return {
     gameId: resolvedGameId,
     totalGames: items.length,
     bestFlipTurns,
+    bestScore,
     wins,
     opponents: [...opponents],
     lastPlayedAt: items[0]?.playedAt ?? null,

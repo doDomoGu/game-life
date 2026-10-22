@@ -68,7 +68,11 @@ function openHistory() {
       <div class="stat">
         <span class="stat__label">{{ game.intro.bestRecordLabel }}</span>
         <span class="stat__value">{{
-          game.intro.recordStyle === 'match' ? (stats.wins ?? 0) : (stats.bestFlipTurns ?? '—')
+          game.intro.recordStyle === 'match'
+            ? (stats.wins ?? 0)
+            : game.intro.recordStyle === 'score'
+              ? (stats.bestScore ?? '—')
+              : (stats.bestFlipTurns ?? '—')
         }}</span>
       </div>
     </div>

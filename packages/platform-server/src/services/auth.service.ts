@@ -57,3 +57,12 @@ export function verifyToken(token: string): { userId: string } {
     throw Object.assign(new Error('未登录或 token 无效'), { statusCode: 401 });
   }
 }
+
+/** 非 HTTP 入口（如 WebSocket）复用同一套鉴权 */
+export async function authenticateToken(token: string) {
+  if (!token) throw Object.assign(new Error('未登录'), { statusCode: 401 });
+  const { userId } = verifyToken(token);
+  const user = await userRepo.findUserById(userId);
+  if (!user) throw Object.assign(new Error('用户不存在'), { statusCode: 401 });
+  return { id: user.id, username: user.username };
+}

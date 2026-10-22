@@ -3,6 +3,7 @@ import { existsSync, statSync } from 'node:fs';
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
 import fastifyStatic from '@fastify/static';
+import websocket from '@fastify/websocket';
 import type { ServerGamePlugin } from './games/registry.js';
 import { registerServerGames, getServerGamePlugins } from './games/registry.js';
 import { configurePlatformRuntime, getPlatformRuntime } from './config/runtime.js';
@@ -13,8 +14,9 @@ import { roomRoutes } from './rooms/routes.js';
 
 export type { ServerGamePlugin } from './games/registry.js';
 export { requireAuth } from './middleware/auth.js';
+export { authenticateToken } from './services/auth.service.js';
 export { appendRecord } from './storage/record.repository.js';
-export { getRoom, finishRoom } from './rooms/store.js';
+export { getRoom, finishRoom, resetRoom, startRoom } from './rooms/store.js';
 
 export interface CreateServerOptions {
   games: ServerGamePlugin[];
@@ -37,6 +39,8 @@ export async function createServer(options: CreateServerOptions) {
   const app = Fastify({ logger: true });
 
   await app.register(cors, { origin: true });
+  // WebSocket 插件必须在路由之前注册，游戏的实时通道才能复用同一条 HTTP 服务
+  await app.register(websocket);
   await app.register(authRoutes);
   await app.register(gamesRoutes);
   await app.register(recordsRoutes);

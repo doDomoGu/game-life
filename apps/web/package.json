@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@game-life/game-bingo": "workspace:*",
+    "@game-life/game-hanabi": "workspace:*",
     "@game-life/game-poker-memory": "workspace:*",
     "@game-life/platform-web": "workspace:*",
     "@game-life/shared": "workspace:*",
