@@ -1,0 +1,98 @@
+.gitignore
+  s_b37bb4586d1548::t_d39e9cb31be517 8,13
+  s_b37bb4586d1548::t_a7394046e623b3 3
+apps/server/package.json
+  s_b37bb4586d1548::t_c71b9baa9c716c 10
+  s_b37bb4586d1548::t_5b7f6d0fa4a0d1 22
+games/bingo/package.json
+  s_b37bb4586d1548::t_fb15ad31457a7e 15-16,19,21
+packages/platform-web/src/api/client.ts
+  s_b37bb4586d1548::t_613273f7c44d31 5
+packages/platform-server/src/index.ts
+  s_b37bb4586d1548::t_841269383f9f32 1-2,5
+  s_b37bb4586d1548::t_1ed817699f55f2 53-62,69-81
+  s_b37bb4586d1548::t_9ca90d9efa724d 24-25
+  s_b37bb4586d1548::t_6b69df9f69fb87 63-68
+deploy.sh
+  s_b37bb4586d1548::t_1fe6a3ec7ead47 1-84
+games/bingo/src/web/Room.vue
+  s_b37bb4586d1548::t_5c8c9ab2d60c7c 7,16,23-28,35,42-43,47-49,53-57,71,75-92,94-100,102,104-111,116-120,122-131,133-136,138-140,143-144,146-148,152-158,161-187,190,194,198-202,205-206,209-214,216-218,220-223,225,227-233
+packages/platform-web/src/router/index.ts
+  s_b37bb4586d1548::t_5bedf1b418d03c 71
+deploy/scp-pass.exp
+  s_b37bb4586d1548::t_880713534d75ec 1-25
+games/bingo/src/web/scene/BingoScene.ts
+  s_b37bb4586d1548::t_14705d6ff9e602 588-591,594-604
+  s_b37bb4586d1548::t_d27cc2ffa927a5 775,777-779,790
+  s_b37bb4586d1548::t_11eff4a7dc8949 353
+  s_b37bb4586d1548::t_cc01af6dececab 243-244
+  s_b37bb4586d1548::t_52256cd170dcdf 34
+  s_b37bb4586d1548::t_124e08597a52d1 484
+  s_b37bb4586d1548::t_7f3eab2e7af1a3 487
+  s_b37bb4586d1548::t_8033a091efe1b3 566
+  s_b37bb4586d1548::t_e40f545b444489 303-312
+  s_b37bb4586d1548::t_a6e659b52169f4 583-587
+  s_b37bb4586d1548::t_4464ad3996202d 618-622
+  s_b37bb4586d1548::t_8fcf224076e63c 1-33,35-196,199-206,208-242,245-302,313-341,343-352,354-483,485-486,488-523,535-565,567-582,592-593,605-617,623-771,773-774,776,780-789,791-848,856,859-1016,1035-1046,1048-1081
+  s_b37bb4586d1548::t_a0f912e3ecf889 849-855,857-858
+  s_b37bb4586d1548::t_dcf7b9fe22c072 197-198
+  s_b37bb4586d1548::t_8d3957c26fa051 525-527,530
+  s_b37bb4586d1548::t_3a1d4d51ece754 1017-1034
+  s_b37bb4586d1548::t_9779bc15edc4a6 772
+  s_b37bb4586d1548::t_c6a51d2eb2b9ef 1047
+  s_b37bb4586d1548::t_f98ad793bb3952 342
+  s_b37bb4586d1548::t_57a3e392a39a37 207
+  s_b37bb4586d1548::t_3c9ffd2d47c72f 524,528-529,531-534
+packages/platform-web/src/env.d.ts
+  s_b37bb4586d1548::t_41776158d054cc 3-11
+apps/web/.env.production
+  s_b37bb4586d1548::t_5b84baa59bcdf9 1-2
+games/bingo/src/web/BingoBoard.vue
+  s_b37bb4586d1548::t_5eb0854b4afd54 52-58
+  s_b37bb4586d1548::t_9f795c62ed9601 17
+  s_b37bb4586d1548::t_1ef7fe18d52e8e 1-11,13-16,18-51,59-75,78-169
+  s_b37bb4586d1548::t_608e164ff9fe83 12
+  s_b37bb4586d1548::t_a3e7e414ecda07 76-77
+packages/platform-web/src/views/RoomView.vue
+  s_b37bb4586d1548::t_7faca52097ba7e 165,167-169
+games/bingo/src/server/engine.ts
+  s_b37bb4586d1548::t_3362b89a4c8bed 2
+  s_b37bb4586d1548::t_4148ea65fcbdcf 28
+deploy/game-life.conf
+  s_b37bb4586d1548::t_cc193c26fe23a6 1-20
+apps/server/src/index.ts
+  s_b37bb4586d1548::t_62f52f6e82fccf 2,12-14,21
+deploy/game-life.service
+  s_b37bb4586d1548::t_c1ae22120e0b99 1-19
+deploy/remote-deploy.sh
+  s_b37bb4586d1548::t_31c78b34d9a630 1-3,6-51
+  s_b37bb4586d1548::t_34f712069f5237 4-5
+games/bingo/src/lines.ts
+  s_b37bb4586d1548::t_5bbc2d5b5cfa32 1-23
+apps/server/build.mjs
+  s_b37bb4586d1548::t_69d806710eff30 1-14
+deploy/ssh-pass.exp
+  s_b37bb4586d1548::t_880713534d75ec 1-25
+README.md
+  s_b37bb4586d1548::t_eba982f66c013d 29
+packages/platform-server/package.json
+  s_b37bb4586d1548::t_7cd7250947f658 16-17
+apps/web/vite.config.ts
+  s_b37bb4586d1548::t_5cbbeaad800cdf 1,5-17,19-20,22-32,35
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.51-trip",
+  "base_commit_sha": "c467c2cd2a987b15f00b89d5ab588fe0a4810039",
+  "prompts": {},
+  "sessions": {
+    "s_b37bb4586d1548": {
+      "agent_id": {
+        "tool": "chengxiaobang",
+        "id": "s_dzyh253wj1v3",
+        "model": "DeepSeek-V4.1-Flash"
+      },
+      "human_author": "gulingjun <gulingjun@trip.com>"
+    }
+  }
+}
