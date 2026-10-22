@@ -4,6 +4,7 @@ import { useRoute } from 'vue-router';
 import { useAuthStore } from '@game-life/platform-web';
 import type { BingoRoomView } from './api.js';
 import { drawBingoRoom, fetchBingoRoom } from './api.js';
+import BingoBoard from './BingoBoard.vue';
 
 const route = useRoute();
 const auth = useAuthStore();
@@ -12,11 +13,18 @@ const code = computed(() => String(route.params.code ?? '').toUpperCase());
 const room = ref<BingoRoomView | null>(null);
 const error = ref('');
 const loading = ref(true);
+const drawing = ref(false);
 let pollTimer: ReturnType<typeof setInterval> | null = null;
 
 const isHost = computed(
   () => !!room.value && !!auth.userId && room.value.hostUserId === auth.userId,
 );
+
+const statusText = computed(() => {
+  if (!room.value) return '';
+  if (room.value.status === 'playing') return '进行中';
+  return room.value.status === 'finished' ? '本局结束' : '等待中';
+});
 
 async function refresh() {
   if (!code.value) return;
@@ -24,31 +32,29 @@ async function refresh() {
     room.value = await fetchBingoRoom(code.value);
     error.value = '';
   } catch (e: unknown) {
-    const msg =
-      e && typeof e === 'object' && 'response' in e
-        ? (e as { response?: { data?: { message?: string } } }).response?.data?.message
-        : undefined;
-    error.value = msg ?? '加载失败';
+    error.value = messageOf(e) ?? '加载失败';
   } finally {
     loading.value = false;
   }
 }
 
 async function onDraw() {
-  if (!code.value) return;
+  if (!code.value || drawing.value) return;
+  drawing.value = true;
   try {
     room.value = await drawBingoRoom(code.value);
   } catch (e: unknown) {
-    const msg =
-      e && typeof e === 'object' && 'response' in e
-        ? (e as { response?: { data?: { message?: string } } }).response?.data?.message
-        : undefined;
-    error.value = msg ?? '开奖失败';
+    error.value = messageOf(e) ?? '开奖失败';
+  } finally {
+    drawing.value = false;
   }
 }
 
-function cellLabel(itemId: number) {
-  return room.value?.itemLabels[itemId] ?? '?';
+function messageOf(e: unknown) {
+  if (e && typeof e === 'object' && 'response' in e) {
+    return (e as { response?: { data?: { message?: string } } }).response?.data?.message;
+  }
+  return undefined;
 }
 
 onMounted(() => {
@@ -62,164 +68,169 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="page room">
-    <header v-if="room" class="room__head">
-      <div>
-        <p class="code">房间 {{ room.code }}</p>
-        <p class="status">
-          {{
-            room.status === 'waiting'
-              ? '等待中'
-              : room.status === 'playing'
-                ? '进行中'
-                : '已结束'
-          }}
-        </p>
-      </div>
-    </header>
-
+  <div class="room">
     <p v-if="loading && !room" class="muted">加载中…</p>
     <p v-if="error" class="error">{{ error }}</p>
 
-    <section v-if="room" class="players">
-      <h2>玩家（{{ room.players.length }}/8）</h2>
-      <ul>
-        <li v-for="p in room.players" :key="p.userId">
-          <span>{{ p.username }}</span>
-          <span class="role">{{ p.role === 'host' ? '房主' : '玩家' }}</span>
-        </li>
-      </ul>
-    </section>
-
-    <section v-if="room" class="draws">
-      <h2>已揭晓</h2>
-      <div class="draw-chips">
-        <span v-for="id in room.drawnItemIds" :key="id" class="chip">{{ cellLabel(id) }}</span>
+    <template v-if="room">
+      <div class="room__bar">
+        <span class="pill" :class="`pill--${room.status}`">{{ statusText }}</span>
+        <ul class="players">
+          <li
+            v-for="p in room.players"
+            :key="p.userId"
+            class="player"
+            :class="{
+              'player--me': p.userId === auth.userId,
+              'player--winner': room.winner?.userId === p.userId,
+            }"
+          >
+            <span class="player__dot" aria-hidden="true"></span>
+            <span class="player__name">{{ p.username }}</span>
+            <span v-if="p.role === 'host'" class="player__tag">房主</span>
+          </li>
+        </ul>
       </div>
-      <p v-if="room.currentItemId != null" class="current">
-        本轮：<strong>{{ cellLabel(room.currentItemId) }}</strong>
-      </p>
-    </section>
 
-    <div v-if="room?.status === 'playing' && isHost" class="actions">
-      <button type="button" class="btn" @click="onDraw">揭晓下一个图案</button>
-    </div>
+      <BingoBoard v-if="room.myBoard" :room="room" />
 
-    <section v-if="room?.myBoard && room.myMarked" class="board-wrap">
-      <h2>我的格子（{{ auth.username }}）</h2>
-      <div class="board">
-        <div
-          v-for="(itemId, idx) in room.myBoard"
-          :key="idx"
-          class="cell"
-          :class="{ 'cell--marked': room.myMarked[idx] }"
-        >
-          {{ cellLabel(itemId) }}
+      <div v-if="room.status === 'playing' && isHost" class="actions">
+        <button type="button" class="btn" :disabled="drawing" @click="onDraw">
+          {{ drawing ? '揭晓中…' : '揭晓下一个图案' }}
+        </button>
+      </div>
+      <p v-else-if="room.status === 'playing'" class="waiting">等待房主开奖…</p>
+
+      <div v-if="room.winner" class="winner-card">
+        <span class="winner-card__crown" aria-hidden="true">👑</span>
+        <div>
+          <p class="winner-card__title">{{ room.winner.username }} 连成一线！</p>
+          <p class="winner-card__sub">本局结束，房主可退出本局再来一盘</p>
         </div>
       </div>
-    </section>
-
-    <div v-if="room?.winner" class="winner">
-      🎉 获胜：{{ room.winner.username }}
-    </div>
+    </template>
   </div>
 </template>
 
 <style scoped>
-.back {
-  font-size: 14px;
-  display: inline-block;
-  margin-bottom: 12px;
-}
-.code {
-  margin: 0;
-  font-size: 22px;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-}
-.status {
-  margin: 4px 0 0;
-  color: var(--muted);
-  font-size: 14px;
-}
-.players h2,
-.draws h2,
-.board-wrap h2 {
-  font-size: 15px;
-  color: var(--muted);
-  margin: 20px 0 10px;
-}
-.players ul {
-  list-style: none;
-  margin: 0;
-  padding: 0;
+.room__bar {
   display: flex;
-  flex-direction: column;
+  flex-wrap: wrap;
+  align-items: center;
   gap: 8px;
 }
-.players li {
-  display: flex;
-  justify-content: space-between;
-  background: var(--surface);
-  padding: 10px 14px;
-  border-radius: var(--radius);
-}
-.role {
-  font-size: 13px;
+
+.pill {
+  flex: none;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(56, 189, 248, 0.12);
   color: var(--accent);
 }
+
+.pill--finished {
+  background: rgba(74, 222, 128, 0.12);
+  color: #4ade80;
+}
+
+.pill--waiting {
+  background: rgba(148, 163, 184, 0.12);
+  color: var(--muted);
+}
+
+.players {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+}
+
+.player {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--surface);
+  font-size: 13px;
+  color: #cfe3f7;
+}
+
+.player__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #3f5b78;
+}
+
+.player--me .player__dot {
+  background: var(--accent);
+  box-shadow: 0 0 6px var(--accent);
+}
+
+.player--winner {
+  color: #fde68a;
+  background: rgba(251, 191, 36, 0.12);
+}
+
+.player--winner .player__dot {
+  background: #fbbf24;
+  box-shadow: 0 0 6px #fbbf24;
+}
+
+.player__tag {
+  font-size: 11px;
+  color: var(--accent);
+}
+
 .actions {
   margin-top: 16px;
 }
+
 .actions .btn {
   width: 100%;
 }
-.hint {
-  font-size: 13px;
+
+.waiting {
+  margin: 16px 0 0;
+  text-align: center;
+  font-size: 14px;
   color: var(--muted);
-  margin-top: 8px;
 }
-.draw-chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-.chip {
-  background: var(--surface);
-  padding: 6px 10px;
-  border-radius: 8px;
-  font-size: 20px;
-}
-.current {
-  margin-top: 12px;
-}
-.board {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 6px;
-}
-.cell {
-  aspect-ratio: 1;
+
+.winner-card {
   display: flex;
   align-items: center;
-  justify-content: center;
-  background: var(--surface);
-  border-radius: 8px;
-  font-size: clamp(18px, 5vw, 26px);
-  opacity: 0.45;
+  gap: 12px;
+  margin-top: 16px;
+  padding: 14px 16px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, rgba(251, 191, 36, 0.16), rgba(56, 189, 248, 0.1));
+  border: 1px solid rgba(251, 191, 36, 0.35);
 }
-.cell--marked {
-  opacity: 1;
-  box-shadow: 0 0 0 2px var(--accent);
-  background: #1e3a5f;
+
+.winner-card__crown {
+  font-size: 26px;
 }
-.winner {
-  margin-top: 24px;
-  text-align: center;
-  font-size: 18px;
+
+.winner-card__title {
+  margin: 0;
+  font-size: 16px;
   font-weight: 700;
-  color: #4ade80;
+  color: #fde68a;
 }
+
+.winner-card__sub {
+  margin: 4px 0 0;
+  font-size: 13px;
+  color: var(--muted);
+}
+
 .muted {
   color: var(--muted);
 }

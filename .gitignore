@@ -1,10 +1,13 @@
 node_modules
 dist
+dist-server
 *.tsbuildinfo
 .env
 .env.*
 !.env.example
+!apps/web/.env.production
 *.log
 .DS_Store
 apps/server/data/*.json
 !apps/server/data/.gitkeep
+deploy.env

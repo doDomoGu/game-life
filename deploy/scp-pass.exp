@@ -1,0 +1,25 @@
+#!/usr/bin/expect
+set timeout -1
+if {![info exists env(SSHPASS)]} {
+  puts stderr "SSHPASS 未设置"
+  exit 1
+}
+set password $env(SSHPASS)
+set args $argv
+if {[lindex $args 0] eq "--"} {
+  set args [lrange $args 1 end]
+}
+spawn scp {*}$args
+expect {
+  -re {yes/no} {
+    send "yes\r"
+    exp_continue
+  }
+  -re {(?i)password:} {
+    send -- "$password\r"
+    exp_continue
+  }
+  eof
+}
+catch wait result
+exit [lindex $result 3]

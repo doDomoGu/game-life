@@ -162,12 +162,12 @@ onUnmounted(() => {
         </p>
       </template>
 
-      <template v-else-if="room.status === 'finished'">
+      <template v-else>
         <component :is="playComponent" v-if="playComponent" />
-        <button type="button" class="btn start" @click="onExitGame">退出游戏</button>
+        <button v-if="room.status === 'finished'" type="button" class="btn start" @click="onExitGame">
+          退出游戏
+        </button>
       </template>
-
-      <component :is="playComponent" v-else-if="playComponent" />
     </template>
 
     <p v-if="error" class="error">{{ error }}</p>

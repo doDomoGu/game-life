@@ -1,22 +1,9 @@
 import { BINGO_ITEM_COUNT } from '../items.js';
+import { findWinningLine } from '../lines.js';
 import { bingoMeta } from '../meta.js';
 
 const SIZE = bingoMeta.gridSize;
 const CELL_COUNT = SIZE * SIZE;
-
-/** 12 条获胜线（5 横 + 5 竖 + 2 斜） */
-export const WIN_LINES: number[][] = (() => {
-  const lines: number[][] = [];
-  for (let r = 0; r < SIZE; r++) {
-    lines.push(Array.from({ length: SIZE }, (_, c) => r * SIZE + c));
-  }
-  for (let c = 0; c < SIZE; c++) {
-    lines.push(Array.from({ length: SIZE }, (_, r) => r * SIZE + c));
-  }
-  lines.push([0, 6, 12, 18, 24]);
-  lines.push([4, 8, 12, 16, 20]);
-  return lines;
-})();
 
 export function shuffle<T>(arr: T[]): T[] {
   const a = [...arr];
@@ -38,7 +25,7 @@ export function createDrawPool(): number[] {
 
 export function checkWin(marked: boolean[]): boolean {
   if (marked.length !== CELL_COUNT) return false;
-  return WIN_LINES.some((line) => line.every((idx) => marked[idx]));
+  return findWinningLine(marked) !== null;
 }
 
 export function applyDraw(board: number[], marked: boolean[], itemId: number): boolean[] {

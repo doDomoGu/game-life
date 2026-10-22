@@ -26,6 +26,7 @@
 | 层级 | 选型 | 理由 |
 |------|------|------|
 | 前端 | Vue 3 + Vite + Vue Router + Pinia | 生态成熟，按需加载小游戏模块，状态清晰 |
+| 2D 游戏渲染 | PixiJS 8（WebGL / WebGPU 2D） | 棋盘、开奖与胜利动效交给 GPU 批量绘制，替代逐格 DOM 更新 |
 | 移动端 UI | 自研布局 + 可选 Vant 4 | 组件贴近移动场景；Pad 用 CSS 断点放大栅格与触控区域 |
 | 后端 | Node.js + Fastify（或 Express） | 轻量 REST，与前端同语言，便于共享类型 |
 | 密码 | bcrypt | 只存哈希，不存明文 |

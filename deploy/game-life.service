@@ -1,0 +1,19 @@
+[Unit]
+Description=Game Life 小游戏合集
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/game-life
+Environment=NODE_ENV=production
+Environment=PORT=3012
+Environment=DATA_DIR=/opt/game-life/apps/server/data
+Environment=WEB_DIST=/opt/game-life/apps/web/dist
+EnvironmentFile=-/etc/game-life.env
+ExecStart=/usr/local/bin/node /opt/game-life/apps/server/dist-server/index.mjs
+Restart=always
+RestartSec=3
+LimitNOFILE=65535
+
+[Install]
+WantedBy=multi-user.target
