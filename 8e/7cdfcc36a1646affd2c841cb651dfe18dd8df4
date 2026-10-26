@@ -1,0 +1,64 @@
+packages/shared/src/index.ts
+  s_eda959129b187d::t_fa3e1216947b20 1
+docs/games/sudoku.md
+  s_eda959129b187d::t_a1664b1a30d007 1-51
+  s_eda959129b187d::t_0d0b78bf57a5b3 52-53
+packages/platform-web/src/views/RoomView.vue
+  s_eda959129b187d::t_fb23aeceaa5e05 13
+  s_eda959129b187d::t_a4d03ebc32c701 157-160
+  s_eda959129b187d::t_d84d898e99c87b 156
+  s_eda959129b187d::t_3c125617ff25e7 152
+games/sudoku/package.json
+  s_eda959129b187d::t_f1aa71eec0401f 12-13
+docs/games/bingo.md
+  s_eda959129b187d::t_0cef1c68909873 1-46
+games/sudoku/src/web/Play.vue
+  s_eda959129b187d::t_77b5f22791af40 217,221-224
+  s_eda959129b187d::t_622330262b4ac5 195-198
+  s_eda959129b187d::t_b244452e5e5073 51,53-61
+  s_eda959129b187d::t_56dd7fc41ac272 30-37
+  s_eda959129b187d::t_c1bd900c19d18c 2,14
+  s_eda959129b187d::t_c1145c458bd708 140-186
+packages/shared/src/players.ts
+  s_eda959129b187d::t_aa9bfda91443b0 1-12
+pnpm-lock.yaml
+  s_eda959129b187d::t_1d45be6b2db216 177-179
+packages/platform-web/src/views/LobbyView.vue
+  s_eda959129b187d::t_a559a7dafdb1e8 4
+  s_eda959129b187d::t_f5f036e36fac16 124
+  s_eda959129b187d::t_fa27e526214722 80-86
+  s_eda959129b187d::t_905a0c6648d045 113
+docs/games/hanabi.md
+  s_eda959129b187d::t_0265a395339c71 1-53
+games/sudoku/src/web/scene/SudokuScene.ts
+  s_eda959129b187d::t_ff61d5dce52438 275,281
+  s_eda959129b187d::t_498bfdee75762e 185
+  s_eda959129b187d::t_79c346b2be47c5 34
+  s_eda959129b187d::t_8665c883a1db8b 148-151
+  s_eda959129b187d::t_6f48b8eb8b0c7d 239
+  s_eda959129b187d::t_10e289d6e9158b 1-33,35-110,112-147,152-156,158-184,186,188-238,240-274,276-280,282-341
+  s_eda959129b187d::t_81f6460b204b65 157
+  s_eda959129b187d::t_d5fc7e0c88f06f 187
+  s_eda959129b187d::t_a8a5b8fb6e350e 111
+packages/platform-server/src/rooms/store.ts
+  s_eda959129b187d::t_8132aec0115d74 134-138
+  s_eda959129b187d::t_db2aa38ad35c6a 110-116
+  s_eda959129b187d::t_606df32de0081a 2
+  s_eda959129b187d::t_870b1d74df8b21 152-159
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.51-trip",
+  "base_commit_sha": "8e7cdfcc36a1646affd2c841cb651dfe18dd8df4",
+  "prompts": {},
+  "sessions": {
+    "s_eda959129b187d": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "6243fa1d-7e87-4104-bd6a-7a4c8e21dc8d",
+        "model": "grok-4.7"
+      },
+      "human_author": "gulingjun <gulingjun@trip.com>"
+    }
+  }
+}
