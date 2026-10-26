@@ -1,9 +1,22 @@
 import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router';
 import type { WebGamePlugin } from '@game-life/shared';
 import { getWebGameById } from '../games/registry.js';
+import { useAdminStore } from '../stores/admin.js';
 import { useAuthStore } from '../stores/auth.js';
 
 const baseRoutes: RouteRecordRaw[] = [
+  {
+    path: '/admin/login',
+    name: 'admin-login',
+    component: () => import('../views/AdminLoginView.vue'),
+    meta: { adminGuest: true },
+  },
+  {
+    path: '/admin',
+    name: 'admin-users',
+    component: () => import('../views/AdminUsersView.vue'),
+    meta: { requiresAdmin: true },
+  },
   {
     path: '/login',
     name: 'login',
@@ -74,8 +87,15 @@ export function createAppRouter(games: WebGamePlugin[]) {
 
   router.beforeEach(async (to) => {
     const auth = useAuthStore();
+    const admin = useAdminStore();
     if (!auth.ready) {
       await auth.bootstrap();
+    }
+    if (to.meta.requiresAdmin && !admin.isLoggedIn) {
+      return { name: 'admin-login', query: { redirect: to.fullPath } };
+    }
+    if (to.meta.adminGuest && admin.isLoggedIn) {
+      return { name: 'admin-users' };
     }
     if (to.meta.requiresAuth && !auth.isLoggedIn) {
       return { name: 'login', query: { ...to.query, redirect: to.fullPath } };

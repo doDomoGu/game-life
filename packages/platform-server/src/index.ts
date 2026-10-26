@@ -7,6 +7,7 @@ import websocket from '@fastify/websocket';
 import type { ServerGamePlugin } from './games/registry.js';
 import { registerServerGames, getServerGamePlugins } from './games/registry.js';
 import { configurePlatformRuntime, getPlatformRuntime } from './config/runtime.js';
+import { adminRoutes } from './routes/admin.routes.js';
 import { authRoutes } from './routes/auth.routes.js';
 import { gamesRoutes } from './routes/games.routes.js';
 import { recordsRoutes } from './routes/records.routes.js';
@@ -54,6 +55,7 @@ export async function createServer(options: CreateServerOptions) {
   // WebSocket 插件必须在路由之前注册，游戏的实时通道才能复用同一条 HTTP 服务
   await app.register(websocket);
   await app.register(authRoutes);
+  await app.register(adminRoutes);
   await app.register(gamesRoutes);
   await app.register(recordsRoutes);
   await app.register(roomRoutes);

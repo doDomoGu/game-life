@@ -18,6 +18,11 @@ export async function findUserById(id: string): Promise<UserStored | undefined> 
   return data.users.find((u) => u.id === id);
 }
 
+export async function listUsers(): Promise<UserStored[]> {
+  const data = await readJsonFile<UsersFile>(file(), { users: [] });
+  return [...data.users].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+}
+
 export async function createUser(username: string, passwordHash: string): Promise<UserStored> {
   const data = await readJsonFile<UsersFile>(file(), { users: [] });
   const user: UserStored = {
