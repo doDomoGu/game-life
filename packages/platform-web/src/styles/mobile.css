@@ -106,3 +106,74 @@ a {
   font-size: 14px;
   margin: 8px 0;
 }
+
+.app-root,
+.app-content {
+  min-height: 100dvh;
+}
+
+.app-content {
+  position: relative;
+  z-index: 1;
+}
+
+.app-shell {
+  --bg: transparent;
+  --surface: rgba(10, 16, 32, 0.72);
+  --text: #f6f1e4;
+  --muted: #c4b8a2;
+  --accent: #f0c36a;
+  --accent-dim: #d7a44a;
+  --danger: #ff8d8d;
+  --line: rgba(240, 195, 106, 0.4);
+  color: var(--text);
+}
+
+.app-shell .page {
+  background: transparent;
+}
+
+.app-shell h1 {
+  letter-spacing: 0.06em;
+}
+
+.app-shell a {
+  color: #9fd4ff;
+}
+
+.app-shell .page .btn {
+  background: linear-gradient(180deg, #ffe7ad 0%, #e2ae4a 100%);
+  color: #2c1b08;
+  border: 1px solid #fff1c9;
+  border-radius: 14px;
+  box-shadow: 0 3px 0 #8a5e1c;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+}
+
+.app-shell .page .btn--ghost {
+  background: rgba(8, 12, 24, 0.55);
+  color: var(--accent);
+  border: 1px solid var(--line);
+  box-shadow: none;
+}
+
+.app-shell .page .field input,
+.app-shell .page .join input,
+.app-shell .page .game-select,
+.app-shell .page select {
+  background: rgba(8, 12, 24, 0.62);
+  border: 1px solid var(--line);
+  color: var(--text);
+}
+
+.app-shell .page .room-row,
+.app-shell .page .players li,
+.app-shell .page .row,
+.app-shell .page .stats,
+.app-shell .page .summary,
+.app-shell .page .rules {
+  background: rgba(10, 16, 32, 0.7);
+  border: 1px solid var(--line);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}

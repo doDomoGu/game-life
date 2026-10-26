@@ -64,7 +64,7 @@ export function createAppRouter(games: WebGamePlugin[]) {
         path: game.playRoutePath,
         name: game.playRouteName,
         component: game.loadPlay,
-        meta: { requiresAuth: true, gameId: game.id },
+        meta: { requiresAuth: true, gameId: game.id, chrome: 'play' },
       });
     }
     if (game.extraRoutes) {

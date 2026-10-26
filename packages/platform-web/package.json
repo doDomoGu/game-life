@@ -12,7 +12,8 @@
     "typecheck": "vue-tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {
-    "@game-life/shared": "workspace:*"
+    "@game-life/shared": "workspace:*",
+    "pixi.js": "^8.22.0"
   },
   "peerDependencies": {
     "axios": "^1.11.0",

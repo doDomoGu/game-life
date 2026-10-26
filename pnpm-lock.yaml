@@ -22,6 +22,9 @@ importers:
       '@game-life/game-poker-memory':
         specifier: workspace:*
         version: link:../../games/poker-memory
+      '@game-life/game-sudoku':
+        specifier: workspace:*
+        version: link:../../games/sudoku
       '@game-life/platform-server':
         specifier: workspace:*
         version: link:../../packages/platform-server
@@ -56,6 +59,9 @@ importers:
       '@game-life/game-poker-memory':
         specifier: workspace:*
         version: link:../../games/poker-memory
+      '@game-life/game-sudoku':
+        specifier: workspace:*
+        version: link:../../games/sudoku
       '@game-life/platform-web':
         specifier: workspace:*
         version: link:../../packages/platform-web
@@ -163,6 +169,18 @@ importers:
         specifier: ^4.5.0
         version: 4.6.4(vue@3.5.43(typescript@5.9.3))
 
+  games/sudoku:
+    dependencies:
+      '@game-life/shared':
+        specifier: workspace:*
+        version: link:../../packages/shared
+      vue:
+        specifier: ^3.5.0
+        version: 3.5.43(typescript@5.9.3)
+      vue-router:
+        specifier: ^4.5.0
+        version: 4.6.4(vue@3.5.43(typescript@5.9.3))
+
   packages/platform-server:
     dependencies:
       '@fastify/cors':
@@ -208,6 +226,9 @@ importers:
       '@game-life/shared':
         specifier: workspace:*
         version: link:../shared
+      pixi.js:
+        specifier: ^8.22.0
+        version: 8.22.0
     devDependencies:
       axios:
         specifier: ^1.11.0

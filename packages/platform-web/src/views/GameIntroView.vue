@@ -33,6 +33,13 @@ async function loadStats() {
 onMounted(loadStats);
 watch(gameId, loadStats);
 
+function formatClock(seconds: number | null) {
+  if (seconds == null) return '—';
+  const sec = Math.max(0, Math.round(seconds));
+  const min = Math.floor(sec / 60);
+  return `${min}:${String(sec % 60).padStart(2, '0')}`;
+}
+
 function openHistory() {
   if (gameId.value) {
     router.push({ name: 'game-history', params: { gameId: gameId.value } });
@@ -72,14 +79,16 @@ function openHistory() {
             ? (stats.wins ?? 0)
             : game.intro.recordStyle === 'score'
               ? (stats.bestScore ?? '—')
-              : (stats.bestFlipTurns ?? '—')
+              : game.intro.recordStyle === 'time'
+                ? formatClock(stats.bestFlipTurns)
+                : (stats.bestFlipTurns ?? '—')
         }}</span>
       </div>
     </div>
     <p v-if="stats && stats.opponents.length" class="opponents">
       一起玩过：{{ stats.opponents.join('、') }}
     </p>
-    <p v-else-if="!loadingStats" class="stats-empty">暂无对局记录</p>
+    <p v-else-if="!loadingStats && !(stats && stats.totalGames > 0)" class="stats-empty">暂无对局记录</p>
 
     <p class="hint">由房主在房间中选择本游戏并开始。</p>
     <button type="button" class="btn start" @click="router.push({ name: 'lobby' })">返回房间列表</button>

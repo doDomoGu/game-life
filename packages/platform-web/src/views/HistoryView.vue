@@ -26,6 +26,14 @@ function opponentsOf(row: GameRecord) {
     .filter(Boolean);
 }
 
+function difficultyOf(row: GameRecord) {
+  const value = row.meta?.difficulty;
+  if (value === 'easy') return '简单';
+  if (value === 'normal') return '普通';
+  if (value === 'hard') return '困难';
+  return '';
+}
+
 function isMatchRecord(row: GameRecord) {
   return typeof row.meta?.won === 'boolean';
 }
@@ -103,15 +111,17 @@ watch(gameId, loadRecords);
       <li v-for="row in items" :key="row.id" class="row">
         <div>
           <span v-if="game?.intro.recordStyle === 'score'" class="score">{{ row.rawScore }} 分</span>
+          <span v-else-if="game?.intro.recordStyle === 'time'" class="score">{{ formatDuration(row.durationMs ?? row.rawScore * 1000) }}</span>
           <span v-else-if="isMatchRecord(row)" class="score" :class="{ 'score--loss': row.meta?.won !== true }">
             {{ row.meta?.won === true ? '胜' : '负' }}
           </span>
           <span v-else class="score">{{ row.rawScore }} 次</span>
           <span class="time">{{ formatTime(row.playedAt) }}</span>
+          <p v-if="difficultyOf(row)" class="with">{{ difficultyOf(row) }}</p>
           <p v-if="opponentsOf(row).length" class="with">和 {{ opponentsOf(row).join('、') }}</p>
           <p v-else-if="isMatchRecord(row)" class="with">单人</p>
         </div>
-        <span v-if="row.durationMs != null" class="dur">用时 {{ formatDuration(row.durationMs) }}</span>
+        <span v-if="row.durationMs != null && game?.intro.recordStyle !== 'time'" class="dur">用时 {{ formatDuration(row.durationMs) }}</span>
       </li>
     </ul>
   </div>

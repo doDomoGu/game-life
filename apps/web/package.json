@@ -15,6 +15,7 @@
     "@game-life/game-draw-guess": "workspace:*",
     "@game-life/game-hanabi": "workspace:*",
     "@game-life/game-poker-memory": "workspace:*",
+    "@game-life/game-sudoku": "workspace:*",
     "@game-life/platform-web": "workspace:*",
     "@game-life/shared": "workspace:*",
     "axios": "^1.11.0",

@@ -32,8 +32,8 @@ export interface GameIntroConfig {
   rules: string[];
   /** 个人最佳 rawScore 的展示标签，如「最少翻开次数」或「获胜局数」 */
   bestRecordLabel: string;
-  /** match：按胜负与对手展示；score：按得分展示；缺省按翻牌次数 */
-  recordStyle?: 'flip-turns' | 'match' | 'score';
+  /** match：按胜负与对手展示；score：按得分展示；time：按用时展示，越短越好；缺省按翻牌次数 */
+  recordStyle?: 'flip-turns' | 'match' | 'score' | 'time';
   /** 对局历史页说明，缺省则用 bestRecordLabel */
   historyScoreHint?: string;
   /** 多人房间入口（如 Bingo） */

@@ -16,10 +16,11 @@ export default defineConfig(({ mode }) => {
         '@game-life/game-draw-guess': path.resolve(__dirname, '../../games/draw-guess/src'),
         '@game-life/game-hanabi': path.resolve(__dirname, '../../games/hanabi/src'),
         '@game-life/game-poker-memory': path.resolve(__dirname, '../../games/poker-memory/src'),
+        '@game-life/game-sudoku': path.resolve(__dirname, '../../games/sudoku/src'),
       },
     },
     optimizeDeps: {
-      include: ['vue', 'vue-router', 'pinia', 'axios', 'pixi.js'],
+      include: ['vue', 'vue-router', 'pinia', 'axios'],
     },
     server: {
       host: true,
