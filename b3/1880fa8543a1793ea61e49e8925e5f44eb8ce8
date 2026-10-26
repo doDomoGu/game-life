@@ -1,0 +1,94 @@
+games/draw-guess/src/scoring.ts
+  s_eda959129b187d::t_fed8f203408787 1-33
+games/draw-guess/package.json
+  s_eda959129b187d::t_92af8ded768053 1-19
+games/draw-guess/src/view.ts
+  s_eda959129b187d::t_c0f6d88a6d6fcc 1-52
+games/draw-guess/src/server/session.ts
+  s_eda959129b187d::t_645c7bcad1e7d0 143-145
+  s_eda959129b187d::t_1e6dd343add3b9 1-142,146-265,269-415
+  s_eda959129b187d::t_dd363acfba31e7 266-268
+packages/platform-web/src/realtime/timing.ts
+  s_eda959129b187d::t_c77f0085c2fa11 1-2
+games/draw-guess/src/web.ts
+  s_eda959129b187d::t_5ba3ef91ad701c 1-17
+apps/server/package.json
+  s_eda959129b187d::t_45e0227bde1644 16
+apps/web/src/main.ts
+  s_eda959129b187d::t_a341ad6a7066dc 3,8
+docs/games/draw-guess.md
+  s_eda959129b187d::t_065130ff93c6c6 58
+  s_eda959129b187d::t_c57d4aff6dcae4 103
+  s_eda959129b187d::t_ae62db59e37ce2 78-96
+  s_eda959129b187d::t_097d26cf07cfdf 1-57,59-65,67,77,98
+  s_eda959129b187d::t_083a566d918820 66,68-76
+  s_eda959129b187d::t_2148cf5eccca7d 97,99-102,104-115
+games/hanabi/src/server/rooms.ts
+  s_eda959129b187d::t_334ae3cf67af16 96,102
+  s_eda959129b187d::t_db6feef37b9b84 63
+  s_eda959129b187d::t_cc78fccb5ac839 24
+  s_eda959129b187d::t_5e850784ba3af4 3,7,9-10
+games/hanabi/src/web/socket.ts
+  s_eda959129b187d::t_01a74b81383248 1,4,6,17-21,24-26,31
+games/draw-guess/src/meta.ts
+  s_eda959129b187d::t_9083890ebe5516 1-9
+games/draw-guess/src/constants.ts
+  s_eda959129b187d::t_cb5ab7e16d018f 1-6
+games/draw-guess/src/server/routes.ts
+  s_eda959129b187d::t_3875946cce3336 1-32
+games/draw-guess/src/server.ts
+  s_eda959129b187d::t_7ae15596df4dad 1-16
+games/draw-guess/data/words.json
+  s_eda959129b187d::t_f5e99b6cc88da4 1-85
+games/draw-guess/src/routes.ts
+  s_eda959129b187d::t_4304f413121ae6 1-4
+apps/server/src/index.ts
+  s_eda959129b187d::t_7e4fcc900c0436 19
+  s_eda959129b187d::t_25b08b3f2cd01b 6
+games/draw-guess/src/words.ts
+  s_eda959129b187d::t_37f26ce27363d5 1-79
+packages/platform-server/src/realtime/presence.ts
+  s_eda959129b187d::t_b66e1fba464945 1-56
+games/draw-guess/src/web/Game.vue
+  s_eda959129b187d::t_8a359d4d870ef3 85-88
+  s_eda959129b187d::t_645833e417115d 83,89
+  s_eda959129b187d::t_4428bfc45d7643 298-299
+  s_eda959129b187d::t_9b2c35aa13658d 1,3-82,84,90-185,192-297,300-488
+  s_eda959129b187d::t_a9caae33992d7a 2
+packages/platform-server/src/index.ts
+  s_eda959129b187d::t_483e1ec97450d3 20-31
+packages/platform-web/src/index.ts
+  s_eda959129b187d::t_fbeaad58dd4f7a 15
+packages/platform-server/src/realtime/accept.ts
+  s_eda959129b187d::t_eb72be5c89b8f9 1-110
+apps/web/package.json
+  s_eda959129b187d::t_db5e431a318173 15
+packages/platform-web/src/realtime/socket.ts
+  s_eda959129b187d::t_25ac8f0b72b414 1-25,27-29,32-37,39-103
+  s_eda959129b187d::t_c503e8c884bb95 26,30-31
+  s_eda959129b187d::t_573b884c5b0945 38
+apps/server/tsconfig.json
+  s_eda959129b187d::t_ffb073bffc1010 6
+games/hanabi/src/server/routes.ts
+  s_eda959129b187d::t_18d7cb4259020b 110,114-124
+  s_eda959129b187d::t_144c182fe1f062 132,135-141
+  s_eda959129b187d::t_3786c93de5fbd5 3
+games/draw-guess/src/intro.config.ts
+  s_eda959129b187d::t_d31a75add47252 1-16
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.51-trip",
+  "base_commit_sha": "b31880fa8543a1793ea61e49e8925e5f44eb8ce8",
+  "prompts": {},
+  "sessions": {
+    "s_eda959129b187d": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "6243fa1d-7e87-4104-bd6a-7a4c8e21dc8d",
+        "model": "grok-4.7"
+      },
+      "human_author": "gulingjun <gulingjun@trip.com>"
+    }
+  }
+}
