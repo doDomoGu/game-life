@@ -1,0 +1,64 @@
+games/klotski/src/meta.ts
+  s_eda959129b187d::t_9e5066751623b0 1-11
+games/klotski/src/intro.config.ts
+  s_eda959129b187d::t_61ab9f562244d6 1-13
+apps/web/vite.config.ts
+  s_eda959129b187d::t_67c5b32f9f0c44 20
+apps/web/package.json
+  s_eda959129b187d::t_55a74e18ecbeee 19
+games/klotski/src/web/scene/KlotskiScene.ts
+  s_eda959129b187d::t_e373ae8a760154 267,269
+  s_eda959129b187d::t_633217d129967d 53-54
+  s_eda959129b187d::t_8e4792f6af5380 283,285-286
+  s_eda959129b187d::t_80b0b93cf94455 196-197
+  s_eda959129b187d::t_9814c392f78ba6 1-52,55-195,198-207,210-225,227-266,268,270-282,284,287-321
+  s_eda959129b187d::t_4f5bdbcffc96c3 208-209
+  s_eda959129b187d::t_be1c9fbe897ef0 226
+games/klotski/src/board.ts
+  s_eda959129b187d::t_824ba665f28b77 74-104
+  s_eda959129b187d::t_013d090981d0a6 1-52,72-73,106-107,109-110
+  s_eda959129b187d::t_8cafd4db85a5de 53-71,105,108
+.cursor/rules/new-games.mdc
+  s_eda959129b187d::t_814d6b70fa07c6 1-13
+packages/platform-web/src/views/HistoryView.vue
+  s_eda959129b187d::t_5b77b8af96ccda 30-31
+  s_eda959129b187d::t_91bf53f1369590 117
+games/klotski/src/web/Play.vue
+  s_eda959129b187d::t_880b4d68210dc8 1-221
+games/klotski/package.json
+  s_eda959129b187d::t_6c1af270b8b96a 1-19
+games/klotski/src/rules.ts
+  s_eda959129b187d::t_1f784e0c4bd30e 1-14
+apps/server/src/index.ts
+  s_eda959129b187d::t_c8d8fff6fbfea8 9
+games/klotski/src/server.ts
+  s_eda959129b187d::t_5492969b7213af 1-12
+apps/web/tsconfig.app.json
+  s_eda959129b187d::t_4a670f60000206 25-26
+docs/games/klotski.md
+  s_eda959129b187d::t_ef99f9317543b8 1-50
+games/klotski/src/routes.ts
+  s_eda959129b187d::t_f57316c5f07c61 1-6
+apps/server/package.json
+  s_eda959129b187d::t_d4c38a7fcc4b4e 20
+games/klotski/src/levels.ts
+  s_eda959129b187d::t_02b2dc52994384 1-83
+games/klotski/src/web.ts
+  s_eda959129b187d::t_5a37f8d6a8f336 1-19
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.51-trip",
+  "base_commit_sha": "4de58d52addc5923e284ff58f7d3ccbe59cd1b3e",
+  "prompts": {},
+  "sessions": {
+    "s_eda959129b187d": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "6243fa1d-7e87-4104-bd6a-7a4c8e21dc8d",
+        "model": "grok-4.7"
+      },
+      "human_author": "gulingjun <gulingjun@trip.com>"
+    }
+  }
+}
