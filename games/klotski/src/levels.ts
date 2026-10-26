@@ -1,77 +1,163 @@
-import { clonePieces, type Piece } from './board.js';
+import { clonePieces, type Piece, type PieceKind } from './board.js';
 
 export interface KlotskiLevel {
-  id: 'easy' | 'normal' | 'hard';
+  id: string;
   name: string;
-  label: string;
   pieces: Piece[];
 }
 
-const CAO = (x: number, y: number): Piece => ({ id: 'cao', name: '曹操', kind: 'cao', w: 2, h: 2, x, y });
-const GUAN = (x: number, y: number): Piece => ({ id: 'guan', name: '关羽', kind: 'general', w: 2, h: 1, x, y });
-const TALL = (id: string, name: string, x: number, y: number): Piece => ({
-  id,
-  name,
-  kind: 'general',
-  w: 1,
-  h: 2,
-  x,
-  y,
-});
-const SOLDIER = (id: string, x: number, y: number): Piece => ({ id, name: '兵', kind: 'soldier', w: 1, h: 1, x, y });
+/** [高, 宽, 行, 列]，行从 0 起。第一块必须是曹操，且位于第 0 行第 1 列。 */
+type Block = [number, number, number, number];
 
+const VERTICAL = ['张飞', '赵云', '马超', '黄忠'];
+const HORIZONTAL = ['关羽', '黄忠', '马超'];
+
+function build(id: string, name: string, blocks: Block[]): KlotskiLevel {
+  let vertical = 0;
+  let horizontal = 0;
+  let soldier = 0;
+  const pieces: Piece[] = blocks.map(([h, w, y, x], index) => {
+    if (index === 0) return piece('cao', '曹操', 'cao', w, h, x, y);
+    if (w === 2 && h === 1) {
+      const order = horizontal++;
+      return piece(`h${order}`, HORIZONTAL[order] ?? '关羽', 'general', w, h, x, y);
+    }
+    if (w === 1 && h === 2) {
+      const order = vertical++;
+      return piece(`v${order}`, VERTICAL[order] ?? '张飞', 'general', w, h, x, y);
+    }
+    const order = soldier++;
+    return piece(`s${order}`, '兵', 'soldier', w, h, x, y);
+  });
+  return { id, name, pieces };
+}
+
+function piece(id: string, name: string, kind: PieceKind, w: number, h: number, x: number, y: number): Piece {
+  return { id, name, kind, w, h, x, y };
+}
+
+/** 十道经典布局，曹操都在顶上正中。坐标来自公开的华容道布局表。 */
 export const LEVELS: KlotskiLevel[] = [
-  {
-    id: 'easy',
-    name: '近在咫尺',
-    label: '简单',
-    pieces: [
-      CAO(0, 3),
-      GUAN(2, 3),
-      TALL('zhang', '张飞', 0, 0),
-      TALL('zhao', '赵云', 2, 0),
-      TALL('ma', '马超', 1, 1),
-      TALL('huang', '黄忠', 3, 1),
-      SOLDIER('s1', 0, 2),
-      SOLDIER('s2', 2, 2),
-      SOLDIER('s3', 2, 4),
-      SOLDIER('s4', 3, 4),
-    ],
-  },
-  {
-    id: 'normal',
-    name: '小试牛刀',
-    label: '普通',
-    pieces: [
-      CAO(1, 2),
-      GUAN(1, 4),
-      TALL('zhang', '张飞', 0, 1),
-      TALL('zhao', '赵云', 2, 0),
-      TALL('ma', '马超', 1, 0),
-      TALL('huang', '黄忠', 3, 1),
-      SOLDIER('s1', 3, 4),
-      SOLDIER('s2', 3, 3),
-      SOLDIER('s3', 0, 3),
-      SOLDIER('s4', 0, 4),
-    ],
-  },
-  {
-    id: 'hard',
-    name: '横刀立马',
-    label: '困难',
-    pieces: [
-      CAO(1, 0),
-      GUAN(1, 2),
-      TALL('zhang', '张飞', 0, 0),
-      TALL('zhao', '赵云', 3, 0),
-      TALL('ma', '马超', 0, 2),
-      TALL('huang', '黄忠', 3, 2),
-      SOLDIER('s1', 1, 3),
-      SOLDIER('s2', 2, 3),
-      SOLDIER('s3', 0, 4),
-      SOLDIER('s4', 3, 4),
-    ],
-  },
+  build('jiezu', '捷足先登', [
+    [2, 2, 0, 1],
+    [2, 1, 3, 0],
+    [2, 1, 3, 1],
+    [2, 1, 3, 2],
+    [2, 1, 3, 3],
+    [1, 2, 2, 1],
+    [1, 1, 0, 0],
+    [1, 1, 0, 3],
+    [1, 1, 1, 0],
+    [1, 1, 1, 3],
+  ]),
+  build('bingfen', '兵分三路', [
+    [2, 2, 0, 1],
+    [2, 1, 1, 0],
+    [2, 1, 1, 3],
+    [2, 1, 3, 0],
+    [2, 1, 3, 3],
+    [1, 2, 2, 1],
+    [1, 1, 0, 0],
+    [1, 1, 0, 3],
+    [1, 1, 3, 1],
+    [1, 1, 3, 2],
+  ]),
+  build('yilu', '一路顺风', [
+    [2, 2, 0, 1],
+    [2, 1, 0, 0],
+    [2, 1, 2, 0],
+    [2, 1, 2, 3],
+    [2, 1, 3, 2],
+    [1, 2, 2, 1],
+    [1, 1, 0, 3],
+    [1, 1, 1, 3],
+    [1, 1, 3, 1],
+    [1, 1, 4, 1],
+  ]),
+  build('yusheng', '雨声淅沥', [
+    [2, 2, 0, 1],
+    [2, 1, 0, 0],
+    [2, 1, 2, 0],
+    [2, 1, 2, 3],
+    [2, 1, 3, 1],
+    [1, 2, 2, 1],
+    [1, 1, 0, 3],
+    [1, 1, 1, 3],
+    [1, 1, 4, 0],
+    [1, 1, 4, 3],
+  ]),
+  build('zuoyou', '左右布兵', [
+    [2, 2, 0, 1],
+    [2, 1, 2, 0],
+    [2, 1, 2, 1],
+    [2, 1, 2, 2],
+    [2, 1, 2, 3],
+    [1, 2, 4, 1],
+    [1, 1, 0, 0],
+    [1, 1, 0, 3],
+    [1, 1, 1, 0],
+    [1, 1, 1, 3],
+  ]),
+  build('qitou', '齐头并进', [
+    [2, 2, 0, 1],
+    [2, 1, 0, 0],
+    [2, 1, 0, 3],
+    [2, 1, 3, 0],
+    [2, 1, 3, 3],
+    [1, 2, 3, 1],
+    [1, 1, 2, 0],
+    [1, 1, 2, 1],
+    [1, 1, 2, 2],
+    [1, 1, 2, 3],
+  ]),
+  build('zhihui', '指挥若定', [
+    [2, 2, 0, 1],
+    [2, 1, 0, 0],
+    [2, 1, 0, 3],
+    [2, 1, 3, 0],
+    [2, 1, 3, 3],
+    [1, 2, 2, 1],
+    [1, 1, 2, 0],
+    [1, 1, 2, 3],
+    [1, 1, 3, 1],
+    [1, 1, 3, 2],
+  ]),
+  build('jiangyong', '将拥曹营', [
+    [2, 2, 0, 1],
+    [2, 1, 1, 0],
+    [2, 1, 1, 3],
+    [2, 1, 2, 1],
+    [2, 1, 2, 2],
+    [1, 2, 4, 0],
+    [1, 1, 3, 0],
+    [1, 1, 3, 3],
+    [1, 1, 4, 2],
+    [1, 1, 4, 3],
+  ]),
+  build('hengdao', '横刀立马', [
+    [2, 2, 0, 1],
+    [2, 1, 0, 0],
+    [2, 1, 0, 3],
+    [2, 1, 2, 0],
+    [2, 1, 2, 3],
+    [1, 2, 2, 1],
+    [1, 1, 3, 1],
+    [1, 1, 3, 2],
+    [1, 1, 4, 0],
+    [1, 1, 4, 3],
+  ]),
+  build('cengceng', '层层设防', [
+    [2, 2, 0, 1],
+    [2, 1, 0, 0],
+    [2, 1, 0, 3],
+    [1, 2, 2, 1],
+    [1, 2, 3, 1],
+    [1, 2, 4, 1],
+    [1, 1, 2, 0],
+    [1, 1, 2, 3],
+    [1, 1, 3, 0],
+    [1, 1, 3, 3],
+  ]),
 ];
 
 export function levelById(id: string) {

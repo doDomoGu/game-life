@@ -51,7 +51,7 @@ function sceneState(): KlotskiSceneState {
     clockText: clockText.value,
     submitting: submitting.value,
     submitError: submitError.value,
-    showReplay: phase.value === 'done' && !roomPlay,
+    showReplay: phase.value === 'done',
   };
 }
 

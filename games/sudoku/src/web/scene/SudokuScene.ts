@@ -49,8 +49,8 @@ export class SudokuScene {
   static heightFor(width: number, phase: SudokuPhase): number {
     if (phase === 'pick') return 292;
     if (phase === 'generating') return 96;
-    if (phase === 'done') return width + 108;
-    return width + 132;
+    if (phase === 'done') return width + 188;
+    return width + 168;
   }
 
   static async create(canvas: HTMLCanvasElement): Promise<SudokuScene> {

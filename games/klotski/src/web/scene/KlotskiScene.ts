@@ -33,24 +33,53 @@ const COLOR = {
   key: 0x172033,
 };
 
-const FILL: Record<string, number> = {
-  cao: 0x9f2d2d,
-  guan: 0xd4a017,
-  zhang: 0x1d4e89,
-  zhao: 0x1f6b4a,
-  ma: 0x6d28d9,
-  huang: 0x9a3412,
-  s1: 0x6b5344,
-  s2: 0x6b5344,
-  s3: 0x6b5344,
-  s4: 0x6b5344,
-};
+const VERTICAL_COLORS = [0x243e73, 0x1e6b45, 0x5b3d8a, 0x8a4b22];
+const HORIZONTAL_COLORS = [0xc8962e, 0xb45309, 0x7c3a2d];
+const CAO_COLOR = 0x8e2a2a;
+const SOLDIER_COLOR = 0x8a7048;
+
+function pieceFill(piece: Piece) {
+  if (piece.kind === 'cao') return CAO_COLOR;
+  if (piece.kind === 'soldier') return SOLDIER_COLOR;
+  const order = Number(piece.id.slice(1)) || 0;
+  return piece.w === 2 ? HORIZONTAL_COLORS[order % HORIZONTAL_COLORS.length] : VERTICAL_COLORS[order % VERTICAL_COLORS.length];
+}
+
+function paintPiece(g: Graphics, piece: Piece, cell: number, fill: number) {
+  const width = piece.w * cell;
+  const height = piece.h * cell;
+  const inset = 4;
+  g.roundRect(inset, inset, width - inset * 2, height - inset * 2, 14)
+    .fill(fill)
+    .stroke({ width: 2, color: 0xf6e7c1, alpha: 0.9 });
+  const radius = Math.min(width, height) * (piece.kind === 'cao' ? 0.2 : 0.16);
+  const cx = width / 2;
+  const cy = piece.kind === 'soldier' ? height * 0.4 : height * 0.36;
+  g.circle(cx, cy, radius).fill(0xf0c9a0);
+  g.circle(cx - radius * 0.34, cy - radius * 0.08, Math.max(1.5, radius * 0.08)).fill(0x1c140c);
+  g.circle(cx + radius * 0.34, cy - radius * 0.08, Math.max(1.5, radius * 0.08)).fill(0x1c140c);
+  if (piece.kind === 'cao') {
+    g.moveTo(cx - radius, cy - radius * 0.55)
+      .lineTo(cx - radius * 0.45, cy - radius * 1.65)
+      .lineTo(cx, cy - radius * 0.85)
+      .lineTo(cx + radius * 0.45, cy - radius * 1.65)
+      .lineTo(cx + radius, cy - radius * 0.55)
+      .closePath()
+      .fill(0xf0c36a);
+    g.roundRect(cx - radius * 0.4, cy + radius * 0.35, radius * 0.8, radius * 0.85, radius * 0.3).fill(0x1c140c);
+  } else if (piece.kind === 'general') {
+    g.roundRect(cx - radius * 0.95, cy - radius * 1.35, radius * 1.9, radius * 0.62, 4).fill(0x2a2118);
+    g.roundRect(cx - radius * 0.35, cy + radius * 0.4, radius * 0.7, radius * 0.7, radius * 0.25).fill(0x1c140c);
+  } else {
+    g.roundRect(cx - radius * 0.8, cy - radius * 1.2, radius * 1.6, radius * 0.45, 3).fill(0x3a2e22);
+  }
+}
 
 export class KlotskiScene {
   static heightFor(width: number, phase: KlotskiPhase): number {
-    if (phase === 'pick') return 300;
+    if (phase === 'pick') return 44 + Math.ceil(LEVELS.length / 2) * 72;
     const cell = width / COLS;
-    if (phase === 'done') return 36 + cell * ROWS + 156;
+    if (phase === 'done') return 36 + cell * ROWS + 148;
     return 36 + cell * ROWS + 96;
   }
 
@@ -165,9 +194,10 @@ export class KlotskiScene {
       style: { fontFamily: FONT, fontSize: 22, fontWeight: '800', fill: COLOR.cream },
     });
     this.root.addChild(title);
+    const colW = (this.width - 10) / 2;
     LEVELS.forEach((level, index) => {
-      const button = this.button(this.width, 64, `${level.name}  ·  ${level.label}`, true);
-      button.position.set(0, 48 + index * 78);
+      const button = this.button(colW, 56, level.name, true);
+      button.position.set((index % 2) * (colW + 10), 44 + Math.floor(index / 2) * 72);
       button.on('pointertap', () => this.handlers.onPick(level));
       this.root.addChild(button);
     });
@@ -218,24 +248,22 @@ export class KlotskiScene {
     }
 
     const done = new Text({
-      text: this.state.submitting
-        ? '正在保存…'
-        : `完成 · ${this.state.levelName} · ${this.state.steps} 步`,
+      text: this.state.submitting ? '正在保存…' : `过关 · ${this.state.steps} 步`,
       style: { fontFamily: FONT, fontSize: 16, fontWeight: '700', fill: COLOR.cream },
     });
-    done.position.set(0, 32 + cell * ROWS + 36);
+    done.position.set(0, 32 + cell * ROWS + 18);
     this.root.addChild(done);
     if (this.state.submitError) {
       const error = new Text({
         text: this.state.submitError,
         style: { fontFamily: FONT, fontSize: 14, fill: 0xfca5a5 },
       });
-      error.position.set(0, done.y + 28);
+      error.position.set(0, done.y + 24);
       this.root.addChild(error);
     }
     if (this.state.showReplay && !this.state.submitting) {
-      const replay = this.button(160, 48, '再来一局', true);
-      replay.position.set(0, done.y + (this.state.submitError ? 56 : 32));
+      const replay = this.button(this.width, 48, '重开一局', true);
+      replay.position.set(0, 32 + cell * ROWS + (this.state.submitError ? 72 : 48));
       replay.on('pointertap', () => this.handlers.onReplay());
       this.root.addChild(replay);
     }
@@ -246,19 +274,19 @@ export class KlotskiScene {
     root.label = piece.id;
     root.position.set(piece.x * cell, piece.y * cell);
     const bg = new Graphics();
-    const inset = 4;
-    bg.roundRect(inset, inset, piece.w * cell - inset * 2, piece.h * cell - inset * 2, 12).fill(FILL[piece.id] ?? COLOR.key);
+    const fill = pieceFill(piece);
+    paintPiece(bg, piece, cell, fill);
     const label = new Text({
       text: piece.name,
       style: {
         fontFamily: FONT,
-        fontSize: piece.kind === 'cao' ? 22 : 16,
+        fontSize: piece.kind === 'soldier' ? 13 : 15,
         fontWeight: '800',
-        fill: piece.id === 'guan' ? COLOR.ink : COLOR.cream,
+        fill: fill === HORIZONTAL_COLORS[0] ? COLOR.ink : COLOR.cream,
       },
     });
-    label.anchor.set(0.5);
-    label.position.set((piece.w * cell) / 2, (piece.h * cell) / 2);
+    label.anchor.set(0.5, 1);
+    label.position.set((piece.w * cell) / 2, piece.h * cell - 8);
     root.addChild(bg, label);
     if (this.state.phase !== 'play') return root;
     root.eventMode = 'static';
@@ -291,6 +319,7 @@ export class KlotskiScene {
   }
 
   private headerText() {
+    if (this.state.phase === 'done') return `${this.state.levelName}    过关 ${this.state.steps} 步`;
     return `${this.state.levelName}    ${this.state.steps} 步    ${this.state.clockText}`;
   }
 
