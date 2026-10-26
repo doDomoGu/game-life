@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, defineAsyncComponent, inject, onMounted, onUnmounted, provide, ref, shallowRef, watch } from 'vue';
+import { computed, defineAsyncComponent, onMounted, onUnmounted, provide, ref, shallowRef, watch } from 'vue';
 import { RouterLink, useRoute, useRouter } from 'vue-router';
 import {
   fetchRoom,
@@ -12,13 +12,11 @@ import {
 } from '../api/rooms.js';
 import { getWebGameById, listWebGames } from '../games/registry.js';
 import { ROOM_PLAY_KEY } from '../room/playKey.js';
-import { SHELL_MATCH_KEY } from '../shell/matchKey.js';
 import { useAuthStore } from '../stores/auth.js';
 
 const route = useRoute();
 const router = useRouter();
 const auth = useAuthStore();
-const shellMatch = inject(SHELL_MATCH_KEY, null);
 
 const code = computed(() => String(route.params.code ?? '').toUpperCase());
 const room = ref<RoomView | null>(null);
@@ -97,13 +95,6 @@ provide(ROOM_PLAY_KEY, {
 });
 
 watch(
-  () => room.value?.status,
-  (status) => {
-    if (shellMatch) shellMatch.value = status === 'playing' || status === 'finished';
-  },
-);
-
-watch(
   () => (room.value?.status === 'waiting' ? '' : (room.value?.gameId ?? '')),
   (gameId) => {
     if (!gameId) {
@@ -123,7 +114,6 @@ onMounted(() => {
 });
 onUnmounted(() => {
   if (timer) clearInterval(timer);
-  if (shellMatch) shellMatch.value = false;
 });
 </script>
 
@@ -145,7 +135,7 @@ onUnmounted(() => {
       <template v-if="room.status === 'waiting'">
         <section>
           <h2>玩家</h2>
-          <ul class="players">
+          <ul class="players room-roster">
             <li v-for="player in room.players" :key="player.userId">
               <span>{{ player.username }}</span>
               <span class="role">{{ player.role === 'host' ? '房主' : '玩家' }}</span>
@@ -173,7 +163,9 @@ onUnmounted(() => {
       </template>
 
       <template v-else>
-        <component :is="playComponent" v-if="playComponent" />
+        <div class="room-stage">
+          <component :is="playComponent" v-if="playComponent" />
+        </div>
         <button v-if="room.status === 'finished'" type="button" class="btn start" @click="onExitGame">
           退出游戏
         </button>

@@ -14,9 +14,8 @@ export function createBackdrop(app: Application) {
   const orbA = new Graphics();
   const orbB = new Graphics();
   const stars = new Container();
-  const frame = new Graphics();
   const root = new Container();
-  root.addChild(sky, wash, orbA, orbB, stars, frame);
+  root.addChild(sky, wash, orbA, orbB, stars);
 
   const skyFill = new FillGradient({
     colorStops: [
@@ -69,26 +68,6 @@ export function createBackdrop(app: Application) {
     sky.rect(0, 0, width, height).fill(skyFill);
     wash.clear();
     wash.rect(0, 0, width, height).fill({ fill: washFill, alpha: 0.2 });
-    frame.clear();
-    const inset = 12;
-    frame
-      .roundRect(inset, inset, Math.max(0, width - inset * 2), Math.max(0, height - inset * 2), 18)
-      .stroke({ width: 1.5, color: 0xf0c36a, alpha: 0.28 });
-    const tick = 22;
-    frame
-      .moveTo(inset, inset + tick)
-      .lineTo(inset, inset)
-      .lineTo(inset + tick, inset)
-      .moveTo(width - inset - tick, inset)
-      .lineTo(width - inset, inset)
-      .lineTo(width - inset, inset + tick)
-      .moveTo(inset, height - inset - tick)
-      .lineTo(inset, height - inset)
-      .lineTo(inset + tick, height - inset)
-      .moveTo(width - inset, height - inset - tick)
-      .lineTo(width - inset, height - inset)
-      .lineTo(width - inset - tick, height - inset)
-      .stroke({ width: 2, color: 0xf6d78a, alpha: 0.85, cap: 'round', join: 'round' });
   }
 
   let time = 0;
