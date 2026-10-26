@@ -1,18 +1,17 @@
 <script setup lang="ts">
-import { computed, inject, onBeforeUnmount, ref, watch } from 'vue';
+import { computed, inject, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { ROOM_PLAY_KEY, submitRecord, type RoomPlayContext } from '@game-life/platform-web';
 import { SUDOKU_GAME_ID } from '../meta.js';
 import { sudokuRoutes } from '../routes.js';
 import {
-  DIFFICULTIES,
   difficultyLabel,
   generatePuzzle,
-  hasConflict,
   isComplete,
   type Difficulty,
   type GeneratedPuzzle,
 } from '../sudoku.js';
+import { SudokuScene, type SudokuSceneState } from './scene/SudokuScene.js';
 
 const router = useRouter();
 const roomPlay = inject<RoomPlayContext | null>(ROOM_PLAY_KEY, null);
@@ -28,6 +27,14 @@ const submitError = ref('');
 const saved = ref(false);
 let timer: ReturnType<typeof setInterval> | null = null;
 
+const host = ref<HTMLDivElement | null>(null);
+const canvas = ref<HTMLCanvasElement | null>(null);
+const scene = shallowRef<SudokuScene | null>(null);
+const sceneError = ref('');
+let observer: ResizeObserver | null = null;
+let resizeRaf = 0;
+let disposed = false;
+
 const givens = computed(() => new Set(puzzle.value?.puzzle.map((value, index) => (value ? index : -1)) ?? []));
 const elapsedSec = computed(() => (startedAt.value ? Math.max(1, Math.round((clock.value - startedAt.value) / 1000)) : 0));
 const clockText = computed(() => {
@@ -41,23 +48,17 @@ function stopTimer() {
   timer = null;
 }
 
-function cellClass(index: number) {
-  const value = values.value[index] ?? 0;
-  const row = Math.floor(index / 9);
-  const col = index % 9;
-  const selectedRow = Math.floor(selected.value / 9);
-  const selectedCol = selected.value % 9;
-  const sameBox =
-    Math.floor(row / 3) === Math.floor(selectedRow / 3) &&
-    Math.floor(col / 3) === Math.floor(selectedCol / 3);
+function sceneState(): SudokuSceneState {
   return {
-    given: givens.value.has(index),
-    selected: index === selected.value,
-    peer: row === selectedRow || col === selectedCol || sameBox,
-    same: value !== 0 && value === values.value[selected.value],
-    conflict: hasConflict(values.value, index),
-    'edge-r': col % 3 === 2 && col !== 8,
-    'edge-b': row % 3 === 2 && row !== 8,
+    phase: phase.value,
+    values: values.value,
+    givens: Array.from({ length: 81 }, (_, index) => givens.value.has(index)),
+    selected: selected.value,
+    difficultyLabel: puzzle.value ? difficultyLabel(puzzle.value.difficulty) : '',
+    clockText: clockText.value,
+    submitting: submitting.value,
+    submitError: submitError.value,
+    showReplay: phase.value === 'done' && !roomPlay,
   };
 }
 
@@ -136,59 +137,65 @@ function goBack() {
   void router.push({ name: sudokuRoutes.introRouteName });
 }
 
-onBeforeUnmount(stopTimer);
+onMounted(async () => {
+  const canvasEl = canvas.value;
+  const hostEl = host.value;
+  if (!canvasEl || !hostEl) return;
+  try {
+    const created = await SudokuScene.create(canvasEl);
+    if (disposed) {
+      created.destroy();
+      return;
+    }
+    created.setHandlers({
+      onPick: start,
+      onSelect: selectCell,
+      onDigit: writeNumber,
+      onReplay: backToPick,
+    });
+    scene.value = created;
+    created.resize(hostEl.clientWidth || 320);
+    created.setState(sceneState());
+    observer = new ResizeObserver((entries) => {
+      const width = entries[0]?.contentRect.width ?? 0;
+      if (width <= 0) return;
+      if (resizeRaf) cancelAnimationFrame(resizeRaf);
+      resizeRaf = requestAnimationFrame(() => {
+        resizeRaf = 0;
+        scene.value?.resize(width);
+      });
+    });
+    observer.observe(hostEl);
+  } catch (error) {
+    console.error('[sudoku] PixiJS 场景初始化失败', error);
+    sceneError.value = '画面加载失败，请刷新后重试';
+  }
+});
+
+watch(sceneState, (state) => {
+  scene.value?.setState(state);
+});
+
+onBeforeUnmount(() => {
+  disposed = true;
+  stopTimer();
+  if (resizeRaf) cancelAnimationFrame(resizeRaf);
+  observer?.disconnect();
+  scene.value?.destroy();
+  scene.value = null;
+});
 </script>
 
 <template>
   <div class="sudo">
     <header class="bar">
       <button type="button" class="btn btn--ghost" @click="goBack">返回</button>
-      <strong v-if="phase === 'play' || phase === 'done'">{{ clockText }}</strong>
-      <span v-if="puzzle" class="muted">{{ difficultyLabel(puzzle.difficulty) }}</span>
     </header>
 
-    <section v-if="phase === 'pick'" class="pick">
-      <h2>选择难度</h2>
-      <button
-        v-for="item in DIFFICULTIES"
-        :key="item.id"
-        type="button"
-        class="btn pick__btn"
-        @click="start(item.id)"
-      >
-        {{ item.label }}
-      </button>
-    </section>
-
-    <p v-else-if="phase === 'generating'" class="muted">正在出题…</p>
-
-    <template v-else>
-      <div class="grid" role="grid">
-        <button
-          v-for="(_value, index) in values"
-          :key="index"
-          type="button"
-          class="cell"
-          :class="cellClass(index)"
-          @click="selectCell(index)"
-        >
-          {{ values[index] || '' }}
-        </button>
-      </div>
-
-      <div v-if="phase === 'play'" class="pad">
-        <button v-for="n in 9" :key="n" type="button" class="key" @click="writeNumber(n)">{{ n }}</button>
-        <button type="button" class="key" @click="writeNumber(0)">擦除</button>
-      </div>
-
-      <section v-else class="result">
-        <h2>完成</h2>
-        <p>{{ puzzle ? difficultyLabel(puzzle.difficulty) : '' }} · 用时 {{ clockText }}</p>
-        <p v-if="submitting" class="muted">正在保存…</p>
-        <p v-else-if="submitError" class="error">{{ submitError }}</p>
-        <button v-if="!roomPlay" type="button" class="btn" @click="backToPick">再来一局</button>
-      </section>
-    </template>
+    <div ref="host" class="stage">
+      <canvas ref="canvas"></canvas>
+    </div>
+    <p v-if="sceneError" class="error">{{ sceneError }}</p>
   </div>
 </template>
 
@@ -207,78 +214,14 @@ onBeforeUnmount(stopTimer);
 .muted {
   color: var(--muted);
 }
-.pick {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-.pick h2,
-.result h2 {
-  margin: 0;
-}
-.pick__btn {
-  width: 100%;
-}
-.grid {
-  display: grid;
-  grid-template-columns: repeat(9, 1fr);
+.stage {
   width: min(100%, 420px);
   margin: 0 auto;
-  aspect-ratio: 1;
-  background: #334155;
-  border: 2px solid #334155;
 }
-.cell {
-  min-height: 0;
-  padding: 0;
-  border: 0;
-  background: #f8fafc;
-  color: #0369a1;
-  font-weight: 700;
-  font-size: clamp(14px, 4.2vw, 22px);
-}
-.cell.given {
-  color: #0f172a;
-}
-.cell.peer {
-  background: #e0f2fe;
-}
-.cell.same {
-  background: #bae6fd;
-}
-.cell.selected {
-  background: #38bdf8;
-  color: #0f172a;
-}
-.cell.conflict {
-  background: #fecaca;
-  color: #b91c1c;
-}
-.cell.edge-r {
-  border-right: 2px solid #334155;
-}
-.cell.edge-b {
-  border-bottom: 2px solid #334155;
-}
-.pad {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 8px;
-}
-.key {
-  min-height: 44px;
-  border: 0;
-  border-radius: 10px;
-  background: var(--surface);
-  color: var(--text);
-  font-weight: 700;
-  font-size: 18px;
-}
-.result {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  align-items: flex-start;
+.stage canvas {
+  display: block;
+  width: 100%;
+  height: auto;
 }
 .error {
   color: var(--danger);

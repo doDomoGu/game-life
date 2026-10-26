@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
+import { gameCapacityLabel } from '@game-life/shared';
 import { createRoom, fetchRooms, joinRoom, type RoomView } from '../api/rooms.js';
 import { useAuthStore } from '../stores/auth.js';
 
@@ -76,6 +77,13 @@ function statusLabel(room: RoomView) {
   if (!room.gameName) return '未选游戏';
   return room.gameName;
 }
+
+function crowdLabel(room: RoomView) {
+  if (room.minPlayers != null && room.maxPlayers != null && room.minPlayers === room.maxPlayers) {
+    return gameCapacityLabel(room.minPlayers, room.maxPlayers);
+  }
+  return `${room.playerCount}${room.maxPlayers ? `/${room.maxPlayers}` : ''} 人`;
+}
 </script>
 
 <template>
@@ -102,7 +110,7 @@ function statusLabel(room: RoomView) {
       <h2>我的房间</h2>
       <button type="button" class="room-row" @click="openRoom(mine.code)">
         <strong>{{ mine.code }}</strong>
-        <span>{{ statusLabel(mine) }} · {{ mine.playerCount }} 人</span>
+        <span>{{ statusLabel(mine) }} · {{ crowdLabel(mine) }}</span>
       </button>
     </section>
 
@@ -113,7 +121,7 @@ function statusLabel(room: RoomView) {
         <li v-for="room in waiting" :key="room.code">
           <button type="button" class="room-row" @click="onJoin(room.code)">
             <strong>{{ room.code }}</strong>
-            <span>{{ statusLabel(room) }} · {{ room.playerCount }}{{ room.maxPlayers ? `/${room.maxPlayers}` : '' }} 人</span>
+            <span>{{ statusLabel(room) }} · {{ crowdLabel(room) }}</span>
           </button>
         </li>
       </ul>

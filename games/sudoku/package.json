@@ -9,7 +9,8 @@
     "./web": "./src/web.ts"
   },
   "dependencies": {
-    "@game-life/shared": "workspace:*"
+    "@game-life/shared": "workspace:*",
+    "pixi.js": "^8.22.0"
   },
   "peerDependencies": {
     "vue": "^3.5.0",

@@ -10,6 +10,7 @@ import {
   startRoom,
   type RoomView,
 } from '../api/rooms.js';
+import { gameCapacityLabel } from '@game-life/shared';
 import { getWebGameById, listWebGames } from '../games/registry.js';
 import { ROOM_PLAY_KEY } from '../room/playKey.js';
 import { useAuthStore } from '../stores/auth.js';
@@ -148,12 +149,15 @@ onUnmounted(() => {
           <select class="game-select" :value="room.gameId ?? ''" @change="onSelect(($event.target as HTMLSelectElement).value)">
             <option value="" disabled>请选择游戏</option>
             <option v-for="game in games" :key="game.id" :value="game.id">
-              {{ game.name }}（{{ game.minPlayers }}–{{ game.maxPlayers }} 人）
+              {{ game.name }}（{{ gameCapacityLabel(game.minPlayers, game.maxPlayers) }}）
             </option>
           </select>
           <p v-if="selectedGame && !canStart" class="hint">
-            「{{ selectedGame.name }}」需要 {{ selectedGame.minPlayers }}–{{ selectedGame.maxPlayers }} 人，当前
-            {{ room.playerCount }} 人
+            「{{ selectedGame.name }}」{{
+              selectedGame.minPlayers === selectedGame.maxPlayers
+                ? `是${gameCapacityLabel(selectedGame.minPlayers, selectedGame.maxPlayers)}`
+                : `需要 ${gameCapacityLabel(selectedGame.minPlayers, selectedGame.maxPlayers)}`
+            }}，当前 {{ room.playerCount }} 人
           </p>
           <button type="button" class="btn start" :disabled="!canStart" @click="onStart">开始游戏</button>
         </section>

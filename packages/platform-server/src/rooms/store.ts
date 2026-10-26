@@ -1,4 +1,5 @@
 import { randomBytes } from 'node:crypto';
+import { gameCapacityLabel } from '@game-life/shared';
 import { getServerGame } from '../games/registry.js';
 
 export type RoomStatus = 'waiting' | 'playing' | 'finished';
@@ -106,7 +107,13 @@ export function joinRoom(code: string, userId: string, username: string): Platfo
   if (room.status === 'playing') fail('对局进行中，无法加入', 400);
   const game = room.gameId ? getServerGame(room.gameId) : undefined;
   const cap = game?.maxPlayers ?? 8;
-  if (room.players.length >= cap) fail(`房间已满（最多 ${cap} 人）`, 400);
+  if (room.players.length >= cap) {
+    const full =
+      game && game.minPlayers === game.maxPlayers
+        ? gameCapacityLabel(game.minPlayers, game.maxPlayers)
+        : `最多 ${cap} 人`;
+    fail(`房间已满（${full}）`, 400);
+  }
   releaseIfIdle(userId);
   const fresh = getRoom(code);
   if (!fresh) fail('房间不存在', 404);
@@ -124,7 +131,11 @@ export function selectGame(code: string, hostUserId: string, gameId: string): Pl
   const game = getServerGame(gameId);
   if (!game) fail('游戏不存在', 404);
   if (room.players.length > game.maxPlayers) {
-    fail(`当前 ${room.players.length} 人，超过「${game.name}」上限 ${game.maxPlayers} 人`, 400);
+    const limit =
+      game.minPlayers === game.maxPlayers
+        ? `是${gameCapacityLabel(game.minPlayers, game.maxPlayers)}`
+        : `最多 ${game.maxPlayers} 人`;
+    fail(`当前 ${room.players.length} 人，「${game.name}」${limit}`, 400);
   }
   room.gameId = gameId;
   return room;
@@ -138,11 +149,14 @@ export async function startRoom(code: string, hostUserId: string): Promise<Platf
   if (!room.gameId) fail('请先选择游戏', 400);
   const game = getServerGame(room.gameId);
   if (!game) fail('游戏不存在', 404);
-  if (room.players.length < game.minPlayers) {
-    fail(`「${game.name}」至少需要 ${game.minPlayers} 人`, 400);
-  }
-  if (room.players.length > game.maxPlayers) {
-    fail(`「${game.name}」最多 ${game.maxPlayers} 人`, 400);
+  if (room.players.length < game.minPlayers || room.players.length > game.maxPlayers) {
+    const limit =
+      game.minPlayers === game.maxPlayers
+        ? `是${gameCapacityLabel(game.minPlayers, game.maxPlayers)}`
+        : room.players.length < game.minPlayers
+          ? `至少需要 ${game.minPlayers} 人`
+          : `最多 ${game.maxPlayers} 人`;
+    fail(`「${game.name}」${limit}，当前 ${room.players.length} 人`, 400);
   }
   if (game.onStart) {
     await game.onStart({
