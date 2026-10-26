@@ -1,0 +1,39 @@
+packages/platform-server/src/routes/admin.routes.ts
+  s_eda959129b187d::t_376b543e902603 1-28
+packages/platform-web/src/stores/admin.ts
+  s_eda959129b187d::t_3ac62dade961f6 1-24
+packages/platform-web/src/router/index.ts
+  s_eda959129b187d::t_3559b002ba083d 4
+  s_eda959129b187d::t_3183219b93de96 90,94-98
+  s_eda959129b187d::t_836edb9e70c665 9-19
+packages/platform-web/src/views/AdminLoginView.vue
+  s_eda959129b187d::t_a04398d7c62090 2-4,9,11-14,16-18,20-27,29,31,33,37,42-47,49-63,69,74
+  s_eda959129b187d::t_86016f19c55f9b 1,5-8,10,15,19,28,30,32,34-36,38-41,48,64-68,70-73,75-76
+packages/platform-server/src/middleware/admin.ts
+  s_eda959129b187d::t_88d5bdcded9d93 1-39
+packages/platform-server/src/storage/user.repository.ts
+  s_eda959129b187d::t_badbe053e083f6 21-25
+packages/platform-server/src/admin/account.ts
+  s_eda959129b187d::t_16319556795a92 1-19
+packages/platform-web/src/views/AdminUsersView.vue
+  s_eda959129b187d::t_f49ca8d1f45a1e 1,5-8,10,23,25,27,29,31,38-40,42-45,50,63-66,73,75-77,97,99-100
+  s_eda959129b187d::t_e07c1054cc8504 2-4,9,11-22,24,26,28,30,32-37,41,46-49,51-62,67-72,74,78-96,98
+packages/platform-server/src/index.ts
+  s_eda959129b187d::t_1bc0ba07bafb8a 58
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.51-trip",
+  "base_commit_sha": "2c5a0eb3ba215e1423bbb8d0f2a2d4594c5a2cbc",
+  "prompts": {},
+  "sessions": {
+    "s_eda959129b187d": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "6243fa1d-7e87-4104-bd6a-7a4c8e21dc8d",
+        "model": "grok-4.7"
+      },
+      "human_author": "gulingjun <gulingjun@trip.com>"
+    }
+  }
+}
