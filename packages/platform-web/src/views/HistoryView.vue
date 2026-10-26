@@ -27,6 +27,8 @@ function opponentsOf(row: GameRecord) {
 }
 
 function difficultyOf(row: GameRecord) {
+  const layout = row.meta?.layoutName;
+  if (typeof layout === 'string' && layout) return layout;
   const value = row.meta?.difficulty;
   if (value === 'easy') return '简单';
   if (value === 'normal') return '普通';
@@ -112,6 +114,7 @@ watch(gameId, loadRecords);
         <div>
           <span v-if="game?.intro.recordStyle === 'score'" class="score">{{ row.rawScore }} 分</span>
           <span v-else-if="game?.intro.recordStyle === 'time'" class="score">{{ formatDuration(row.durationMs ?? row.rawScore * 1000) }}</span>
+          <span v-else-if="row.meta?.kind === 'klotski'" class="score">{{ row.rawScore }} 步</span>
           <span v-else-if="isMatchRecord(row)" class="score" :class="{ 'score--loss': row.meta?.won !== true }">
             {{ row.meta?.won === true ? '胜' : '负' }}
           </span>

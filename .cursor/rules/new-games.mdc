@@ -1,0 +1,13 @@
+---
+description: 新增小游戏时要写开发说明，并用 PixiJS 画对局内容
+alwaysApply: true
+---
+
+# 新游戏
+
+每新增一款游戏，同时完成这两件事：
+
+- 在 `docs/games/<gameId>.md` 写中文开发说明，写明 gameId、人数、规则、成绩字段和代码位置。
+- 对局内容用 PixiJS 绘制，例如棋盘、棋子和操作。登录、房间和结算仍走平台底座。
+
+单人游戏的 `minPlayers` 和 `maxPlayers` 都是 1。

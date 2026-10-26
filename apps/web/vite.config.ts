@@ -17,6 +17,7 @@ export default defineConfig(({ mode }) => {
         '@game-life/game-hanabi': path.resolve(__dirname, '../../games/hanabi/src'),
         '@game-life/game-poker-memory': path.resolve(__dirname, '../../games/poker-memory/src'),
         '@game-life/game-sudoku': path.resolve(__dirname, '../../games/sudoku/src'),
+        '@game-life/game-klotski': path.resolve(__dirname, '../../games/klotski/src'),
       },
     },
     optimizeDeps: {

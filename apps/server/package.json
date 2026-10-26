@@ -17,6 +17,7 @@
     "@game-life/game-hanabi": "workspace:*",
     "@game-life/game-poker-memory": "workspace:*",
     "@game-life/game-sudoku": "workspace:*",
+    "@game-life/game-klotski": "workspace:*",
     "@game-life/platform-server": "workspace:*",
     "@game-life/shared": "workspace:*"
   },

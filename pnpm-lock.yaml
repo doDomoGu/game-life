@@ -19,6 +19,9 @@ importers:
       '@game-life/game-hanabi':
         specifier: workspace:*
         version: link:../../games/hanabi
+      '@game-life/game-klotski':
+        specifier: workspace:*
+        version: link:../../games/klotski
       '@game-life/game-poker-memory':
         specifier: workspace:*
         version: link:../../games/poker-memory
@@ -56,6 +59,9 @@ importers:
       '@game-life/game-hanabi':
         specifier: workspace:*
         version: link:../../games/hanabi
+      '@game-life/game-klotski':
+        specifier: workspace:*
+        version: link:../../games/klotski
       '@game-life/game-poker-memory':
         specifier: workspace:*
         version: link:../../games/poker-memory
@@ -150,6 +156,21 @@ importers:
       fastify:
         specifier: ^5.6.0
         version: 5.12.5
+      vue:
+        specifier: ^3.5.0
+        version: 3.5.43(typescript@5.9.3)
+      vue-router:
+        specifier: ^4.5.0
+        version: 4.6.4(vue@3.5.43(typescript@5.9.3))
+
+  games/klotski:
+    dependencies:
+      '@game-life/shared':
+        specifier: workspace:*
+        version: link:../../packages/shared
+      pixi.js:
+        specifier: ^8.22.0
+        version: 8.22.0
       vue:
         specifier: ^3.5.0
         version: 3.5.43(typescript@5.9.3)
