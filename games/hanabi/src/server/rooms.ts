@@ -1,9 +1,13 @@
 import {
   appendRecord,
+  bindSocket,
   finishRoom,
   getRoom,
   resetRoom,
+  sendJson,
   startRoom,
+  unbindSocket,
+  type PresenceSocket,
 } from '@game-life/platform-server';
 import type { Color } from '../colors.js';
 import type { GameView, HanabiView } from '../view.js';
@@ -17,10 +21,7 @@ import {
 } from './engine.js';
 import { hanabiMeta } from '../meta.js';
 
-export interface SocketLike {
-  readyState: number;
-  send(data: string): void;
-}
+export type SocketLike = PresenceSocket;
 
 export type HanabiAction =
   | { kind: 'hint'; targetPlayerId: string; hintType: 'color' | 'value'; value: Color | number }
@@ -32,6 +33,7 @@ export interface SessionPlayer {
   username: string;
   connected: boolean;
   sockets: Set<SocketLike>;
+  lastSeenAt: number;
 }
 
 export interface HanabiSession {
@@ -58,6 +60,7 @@ export function beginSession(
       username: p.username,
       connected: true,
       sockets: new Set(),
+      lastSeenAt: Date.now(),
     })),
     game,
     historySaved: false,
@@ -90,15 +93,13 @@ function playerOf(session: HanabiSession, userId: string): SessionPlayer | undef
 export function attachSocket(session: HanabiSession, userId: string, socket: SocketLike): void {
   const player = playerOf(session, userId);
   if (!player) return;
-  player.sockets.add(socket);
-  player.connected = true;
+  bindSocket(player, socket);
 }
 
 export function detachSocket(session: HanabiSession, userId: string, socket: SocketLike): void {
   const player = playerOf(session, userId);
   if (!player) return;
-  player.sockets.delete(socket);
-  if (player.sockets.size === 0) player.connected = false;
+  unbindSocket(player, socket);
 }
 
 export function broadcast(session: HanabiSession): void {
@@ -115,7 +116,7 @@ export function broadcast(session: HanabiSession): void {
 }
 
 export function sendTo(socket: SocketLike, type: string, payload: unknown): void {
-  if (socket.readyState === 1) socket.send(JSON.stringify({ type, payload }));
+  sendJson(socket, type, payload);
 }
 
 async function saveHistory(session: HanabiSession): Promise<void> {

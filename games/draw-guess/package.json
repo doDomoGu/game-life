@@ -1,0 +1,19 @@
+{
+  "name": "@game-life/game-draw-guess",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./meta": "./src/meta.ts",
+    "./server": "./src/server.ts",
+    "./web": "./src/web.ts"
+  },
+  "dependencies": {
+    "@game-life/platform-server": "workspace:*",
+    "@game-life/shared": "workspace:*",
+    "fastify": "^5.6.0"
+  },
+  "peerDependencies": {
+    "vue": "^3.5.0"
+  }
+}

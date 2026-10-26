@@ -13,6 +13,7 @@ export default defineConfig(({ mode }) => {
       alias: {
         '@game-life/platform-web': path.resolve(__dirname, '../../packages/platform-web/src'),
         '@game-life/game-bingo': path.resolve(__dirname, '../../games/bingo/src'),
+        '@game-life/game-draw-guess': path.resolve(__dirname, '../../games/draw-guess/src'),
         '@game-life/game-hanabi': path.resolve(__dirname, '../../games/hanabi/src'),
         '@game-life/game-poker-memory': path.resolve(__dirname, '../../games/poker-memory/src'),
       },

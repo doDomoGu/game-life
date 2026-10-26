@@ -17,6 +17,18 @@ export { requireAuth } from './middleware/auth.js';
 export { authenticateToken } from './services/auth.service.js';
 export { appendRecord } from './storage/record.repository.js';
 export { getRoom, finishRoom, resetRoom, startRoom } from './rooms/store.js';
+export {
+  REALTIME_PING_INTERVAL_MS,
+  REALTIME_STALE_MS,
+  bindSocket,
+  unbindSocket,
+  noteSeen,
+  refreshStale,
+  sendJson,
+  type PresenceMember,
+  type PresenceSocket,
+} from './realtime/presence.js';
+export { acceptPlayerSocket, type RealtimeMessage, type RealtimeSocket } from './realtime/accept.js';
 
 export interface CreateServerOptions {
   games: ServerGamePlugin[];

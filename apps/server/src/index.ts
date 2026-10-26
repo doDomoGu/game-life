@@ -3,6 +3,7 @@ import { existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { createServer } from '@game-life/platform-server';
 import { bingoServerPlugin } from '@game-life/game-bingo/server';
+import { drawGuessServerPlugin } from '@game-life/game-draw-guess/server';
 import { hanabiServerPlugin } from '@game-life/game-hanabi/server';
 import { pokerMemoryServerPlugin } from '@game-life/game-poker-memory/server';
 
@@ -15,7 +16,7 @@ const webDist = process.env.WEB_DIST
   : path.resolve(__dirname, '../../web/dist');
 
 await createServer({
-  games: [pokerMemoryServerPlugin, bingoServerPlugin, hanabiServerPlugin],
+  games: [pokerMemoryServerPlugin, bingoServerPlugin, hanabiServerPlugin, drawGuessServerPlugin],
   dataDir,
   jwtSecret: process.env.JWT_SECRET,
   port: process.env.PORT ? Number(process.env.PORT) : undefined,

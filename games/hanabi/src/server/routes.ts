@@ -1,6 +1,6 @@
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import type { GameHttpApp } from '@game-life/shared';
-import { authenticateToken, getRoom, requireAuth } from '@game-life/platform-server';
+import { acceptPlayerSocket, getRoom, requireAuth, type RealtimeSocket } from '@game-life/platform-server';
 import { hanabiMeta } from '../meta.js';
 import type { Color } from '../colors.js';
 import type { HanabiAction, SocketLike } from './rooms.js';
@@ -102,59 +102,26 @@ export async function registerHanabiRoutes(app: GameHttpApp) {
     '/api/games/hanabi/rooms/:code/ws',
     { websocket: true },
     (socket, request) => {
-      void openSocket(socket as unknown as SocketLike, request);
+      void openSocket(socket as unknown as RealtimeSocket, request);
     },
   );
 }
 
-async function openSocket(socket: SocketLike, request: FastifyRequest): Promise<void> {
+async function openSocket(socket: RealtimeSocket, request: FastifyRequest): Promise<void> {
   const query = request.query as { token?: string };
   const code = String((request.params as { code?: string }).code ?? '').toUpperCase();
 
-  let user: { id: string };
-  try {
-    user = await authenticateToken(String(query.token ?? ''));
-  } catch (err) {
-    sessions.sendTo(socket, 'error', { message: errorOf(err).message });
-    closeSocket(socket);
-    return;
-  }
-
-  const room = getRoom(code);
-  if (!room || room.gameId !== hanabiMeta.id) {
-    sessions.sendTo(socket, 'error', { message: '房间不存在' });
-    closeSocket(socket);
-    return;
-  }
-  if (!room.players.some((p) => p.userId === user.id)) {
-    sessions.sendTo(socket, 'error', { message: '你不在该房间' });
-    closeSocket(socket);
-    return;
-  }
-  const session = sessions.getSession(code);
-  if (!session) {
-    sessions.sendTo(socket, 'error', { message: '对局尚未开始' });
-    closeSocket(socket);
-    return;
-  }
-
-  const ws = socket as unknown as {
-    on(event: 'message', cb: (raw: unknown) => void): void;
-    on(event: 'close', cb: () => void): void;
-  };
-
-  sessions.attachSocket(session, user.id, socket);
-  sessions.sendTo(socket, 'room:update', sessions.publicView(session, user.id));
-  sessions.broadcast(session);
-
-  ws.on('message', (raw) => {
-    void onMessage(socket, session.code, user.id, raw);
-  });
-  ws.on('close', () => {
-    const current = sessions.getSession(code);
-    if (!current) return;
-    sessions.detachSocket(current, user.id, socket);
-    sessions.broadcast(current);
+  await acceptPlayerSocket({
+    socket,
+    token: String(query.token ?? ''),
+    code,
+    gameId: hanabiMeta.id,
+    findMember: (roomCode, userId) => sessions.getSession(roomCode)?.players.find((p) => p.userId === userId),
+    onChange: (roomCode) => {
+      const current = sessions.getSession(roomCode);
+      if (current) sessions.broadcast(current);
+    },
+    onMessage: (userId, message) => onMessage(socket, code, userId, message),
   });
 }
 
@@ -162,31 +129,19 @@ async function onMessage(
   socket: SocketLike,
   code: string,
   userId: string,
-  raw: unknown,
+  message: { type?: string; payload?: unknown },
 ): Promise<void> {
-  let message: WireMessage;
   try {
-    message = JSON.parse(String(raw)) as WireMessage;
-  } catch {
-    sessions.sendTo(socket, 'error', { message: '无效消息' });
-    return;
-  }
-
-  if (message.type === 'ping') {
-    sessions.sendTo(socket, 'pong', { t: Date.now() });
-    return;
-  }
-
-  try {
-    const action = parseAction(message);
+    const action = parseAction({
+      type: message.type,
+      payload:
+        message.payload && typeof message.payload === 'object'
+          ? (message.payload as Record<string, unknown>)
+          : {},
+    });
     const session = await sessions.applyAction(code, userId, action);
     sessions.broadcast(session);
   } catch (err) {
     sessions.sendTo(socket, 'error', { message: errorOf(err).message });
   }
-}
-
-function closeSocket(socket: SocketLike): void {
-  const closable = socket as unknown as { close?: () => void };
-  closable.close?.();
 }
