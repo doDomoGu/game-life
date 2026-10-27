@@ -107,23 +107,7 @@ function overlapsShift(pieces: readonly Piece[], group: ReadonlySet<string>, oth
   return false;
 }
 
-function touchesSide(pieces: readonly Piece[], group: ReadonlySet<string>, other: Piece, dx: number, dy: number): boolean {
-  for (const piece of pieces) {
-    if (!group.has(piece.id)) continue;
-    if (dx === 0 && dy !== 0) {
-      const overlap = piece.y < other.y + other.h && piece.y + piece.h > other.y;
-      const touch = piece.x + piece.w === other.x || other.x + other.w === piece.x;
-      if (overlap && touch) return true;
-    } else {
-      const overlap = piece.x < other.x + other.w && piece.x + piece.w > other.x;
-      const touch = piece.y + piece.h === other.y || other.y + other.h === piece.y;
-      if (overlap && touch) return true;
-    }
-  }
-  return false;
-}
-
-/** 被拖的棋子，加上它顶着的、以及并排且同一方向也能让开的棋子。 */
+/** 被拖的棋子，加上它在移动方向上依次顶着的棋子。并排在旁边的棋子不跟着走。 */
 function moveGroup(pieces: readonly Piece[], id: string, dx: number, dy: number): Set<string> {
   const group = new Set([id]);
   let grew = true;
@@ -136,18 +120,6 @@ function moveGroup(pieces: readonly Piece[], id: string, dx: number, dy: number)
     }
   }
   if (!canTranslate(pieces, group, dx, dy)) return new Set([id]);
-  grew = true;
-  while (grew) {
-    grew = false;
-    for (const other of pieces) {
-      if (group.has(other.id) || !touchesSide(pieces, group, other, dx, dy)) continue;
-      const trial = new Set(group);
-      trial.add(other.id);
-      if (!canTranslate(pieces, trial, dx, dy)) continue;
-      group.add(other.id);
-      grew = true;
-    }
-  }
   return group;
 }
 
@@ -197,7 +169,7 @@ export function dragPiece(pieces: readonly Piece[], id: string, towardX: number,
   return cursor;
 }
 
-/** 一次拖动。多颗棋子能朝同一方向让开时一起滑动；只有一颗时仍可以拐弯。 */
+/** 一次拖动。前方被顶住的棋子还能让开时一起滑动；前方没有棋子时单独走，可以拐弯。 */
 export function dragGroup(pieces: readonly Piece[], id: string, towardX: number, towardY: number): PieceMove[] {
   const piece = pieces.find((item) => item.id === id);
   if (!piece) return [];
