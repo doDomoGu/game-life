@@ -2,7 +2,7 @@
 import { computed, inject, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { ROOM_PLAY_KEY, submitRecord, type RoomPlayContext } from '@game-life/platform-web';
-import { clonePieces, isWin, placePiece, type Piece } from '../board.js';
+import { clonePieces, isWin, placeGroup, type Piece, type PieceMove } from '../board.js';
 import { freshPieces, type KlotskiLevel } from '../levels.js';
 import { KLOTSKI_GAME_ID } from '../meta.js';
 import { klotskiRoutes } from '../routes.js';
@@ -14,7 +14,7 @@ const roomPlay = inject<RoomPlayContext | null>(ROOM_PLAY_KEY, null);
 const phase = ref<'pick' | 'play' | 'done'>('pick');
 const level = ref<KlotskiLevel | null>(null);
 const pieces = ref<Piece[]>([]);
-const history = ref<Piece[][]>([]);
+const history = ref<Array<{ pieces: Piece[]; steps: number }>>([]);
 const steps = ref(0);
 const startedAt = ref(0);
 const clock = ref(0);
@@ -71,13 +71,13 @@ function begin(next: KlotskiLevel) {
   }, 250);
 }
 
-function onPlace(id: string, x: number, y: number) {
-  if (phase.value !== 'play') return;
-  const next = placePiece(pieces.value, id, x, y);
+function onPlace(id: string, moves: PieceMove[], cost: number) {
+  if (phase.value !== 'play' || cost < 1) return;
+  const next = placeGroup(pieces.value, id, moves);
   if (!next) return;
-  history.value = [...history.value, clonePieces(pieces.value)];
+  history.value = [...history.value, { pieces: clonePieces(pieces.value), steps: cost }];
   pieces.value = next;
-  steps.value += 1;
+  steps.value += cost;
   if (isWin(next)) {
     phase.value = 'done';
     clock.value = Date.now();
@@ -88,9 +88,10 @@ function onPlace(id: string, x: number, y: number) {
 function onUndo() {
   if (phase.value !== 'play' || history.value.length === 0) return;
   const previous = history.value[history.value.length - 1];
+  if (!previous) return;
   history.value = history.value.slice(0, -1);
-  pieces.value = clonePieces(previous);
-  steps.value = Math.max(0, steps.value - 1);
+  pieces.value = clonePieces(previous.pieces);
+  steps.value = Math.max(0, steps.value - previous.steps);
 }
 
 function onReset() {

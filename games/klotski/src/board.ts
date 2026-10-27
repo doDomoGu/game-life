@@ -71,6 +71,101 @@ export function reachable(pieces: readonly Piece[], piece: Piece): Array<{ x: nu
   return targets;
 }
 
+export interface PieceMove {
+  id: string;
+  x: number;
+  y: number;
+}
+
+function pieceAt(pieces: readonly Piece[], x: number, y: number): Piece | undefined {
+  return pieces.find((piece) => x >= piece.x && x < piece.x + piece.w && y >= piece.y && y < piece.y + piece.h);
+}
+
+function canTranslate(pieces: readonly Piece[], group: ReadonlySet<string>, dx: number, dy: number): boolean {
+  for (const piece of pieces) {
+    if (!group.has(piece.id)) continue;
+    const x = piece.x + dx;
+    const y = piece.y + dy;
+    if (!fits(piece, x, y)) return false;
+    for (let row = y; row < y + piece.h; row += 1) {
+      for (let col = x; col < x + piece.w; col += 1) {
+        const occupier = pieceAt(pieces, col, row);
+        if (occupier && !group.has(occupier.id)) return false;
+      }
+    }
+  }
+  return true;
+}
+
+function overlapsShift(pieces: readonly Piece[], group: ReadonlySet<string>, other: Piece, dx: number, dy: number): boolean {
+  for (const piece of pieces) {
+    if (!group.has(piece.id)) continue;
+    const x = piece.x + dx;
+    const y = piece.y + dy;
+    if (x < other.x + other.w && x + piece.w > other.x && y < other.y + other.h && y + piece.h > other.y) return true;
+  }
+  return false;
+}
+
+function touchesSide(pieces: readonly Piece[], group: ReadonlySet<string>, other: Piece, dx: number, dy: number): boolean {
+  for (const piece of pieces) {
+    if (!group.has(piece.id)) continue;
+    if (dx === 0 && dy !== 0) {
+      const overlap = piece.y < other.y + other.h && piece.y + piece.h > other.y;
+      const touch = piece.x + piece.w === other.x || other.x + other.w === piece.x;
+      if (overlap && touch) return true;
+    } else {
+      const overlap = piece.x < other.x + other.w && piece.x + piece.w > other.x;
+      const touch = piece.y + piece.h === other.y || other.y + other.h === piece.y;
+      if (overlap && touch) return true;
+    }
+  }
+  return false;
+}
+
+/** 被拖的棋子，加上它顶着的、以及并排且同一方向也能让开的棋子。 */
+function moveGroup(pieces: readonly Piece[], id: string, dx: number, dy: number): Set<string> {
+  const group = new Set([id]);
+  let grew = true;
+  while (grew) {
+    grew = false;
+    for (const other of pieces) {
+      if (group.has(other.id) || !overlapsShift(pieces, group, other, dx, dy)) continue;
+      group.add(other.id);
+      grew = true;
+    }
+  }
+  if (!canTranslate(pieces, group, dx, dy)) return new Set([id]);
+  grew = true;
+  while (grew) {
+    grew = false;
+    for (const other of pieces) {
+      if (group.has(other.id) || !touchesSide(pieces, group, other, dx, dy)) continue;
+      const trial = new Set(group);
+      trial.add(other.id);
+      if (!canTranslate(pieces, trial, dx, dy)) continue;
+      group.add(other.id);
+      grew = true;
+    }
+  }
+  return group;
+}
+
+function slideRoom(pieces: readonly Piece[], group: ReadonlySet<string>, dx: number, dy: number): number {
+  const sim = clonePieces(pieces);
+  const limit = dx !== 0 ? COLS : ROWS;
+  let steps = 0;
+  while (steps < limit && canTranslate(sim, group, dx, dy)) {
+    for (const piece of sim) {
+      if (!group.has(piece.id)) continue;
+      piece.x += dx;
+      piece.y += dy;
+    }
+    steps += 1;
+  }
+  return steps;
+}
+
 /** 按住拖动时，棋子朝手指方向沿能走的格子逐格靠拢。 */
 export function dragPiece(pieces: readonly Piece[], id: string, towardX: number, towardY: number): { x: number; y: number } {
   const piece = pieces.find((item) => item.id === id);
@@ -102,9 +197,55 @@ export function dragPiece(pieces: readonly Piece[], id: string, towardX: number,
   return cursor;
 }
 
+/** 一次拖动。多颗棋子能朝同一方向让开时一起滑动；只有一颗时仍可以拐弯。 */
+export function dragGroup(pieces: readonly Piece[], id: string, towardX: number, towardY: number): PieceMove[] {
+  const piece = pieces.find((item) => item.id === id);
+  if (!piece) return [];
+  const dx = towardX - piece.x;
+  const dy = towardY - piece.y;
+  if (dx === 0 && dy === 0) return [];
+  const horizontal = Math.abs(dx) >= Math.abs(dy);
+  const dirX = horizontal ? Math.sign(dx) : 0;
+  const dirY = horizontal ? 0 : Math.sign(dy);
+  const steps = horizontal ? Math.abs(dx) : Math.abs(dy);
+  const group = moveGroup(pieces, id, dirX, dirY);
+  const room = slideRoom(pieces, group, dirX, dirY);
+  if (group.size > 1 && room > 0) {
+    const distance = Math.min(steps, room);
+    return pieces
+      .filter((item) => group.has(item.id))
+      .map((item) => ({ id: item.id, x: item.x + dirX * distance, y: item.y + dirY * distance }));
+  }
+  const next = dragPiece(pieces, id, towardX, towardY);
+  if (next.x === piece.x && next.y === piece.y) return [];
+  return [{ id: piece.id, x: next.x, y: next.y }];
+}
+
 export function placePiece(pieces: readonly Piece[], id: string, x: number, y: number): Piece[] | null {
   const piece = pieces.find((item) => item.id === id);
   if (!piece || (piece.x === x && piece.y === y)) return null;
   if (!reachable(pieces, piece).some((spot) => spot.x === x && spot.y === y)) return null;
   return pieces.map((item) => (item.id === id ? { ...item, x, y } : item));
+}
+
+export function placeGroup(pieces: readonly Piece[], anchorId: string, moves: readonly PieceMove[]): Piece[] | null {
+  const anchor = pieces.find((piece) => piece.id === anchorId);
+  if (!anchor || moves.length === 0 || moves.some((move) => !pieces.some((piece) => piece.id === move.id))) return null;
+  if (moves.length === 1 && moves[0]?.id === anchorId) return placePiece(pieces, anchorId, moves[0].x, moves[0].y);
+  const deltas = moves.map((move) => {
+    const piece = pieces.find((item) => item.id === move.id);
+    return piece ? { dx: move.x - piece.x, dy: move.y - piece.y } : null;
+  });
+  if (deltas.some((delta) => !delta)) return null;
+  const dx = deltas[0]?.dx ?? 0;
+  const dy = deltas[0]?.dy ?? 0;
+  if (deltas.some((delta) => delta?.dx !== dx || delta?.dy !== dy)) return null;
+  if ((dx !== 0 && dy !== 0) || (dx === 0 && dy === 0)) return null;
+  const dirX = Math.sign(dx);
+  const dirY = Math.sign(dy);
+  const distance = Math.abs(dx + dy);
+  const group = moveGroup(pieces, anchorId, dirX, dirY);
+  if (group.size !== moves.length || moves.some((move) => !group.has(move.id))) return null;
+  if (slideRoom(pieces, group, dirX, dirY) < distance) return null;
+  return pieces.map((piece) => (group.has(piece.id) ? { ...piece, x: piece.x + dirX * distance, y: piece.y + dirY * distance } : piece));
 }

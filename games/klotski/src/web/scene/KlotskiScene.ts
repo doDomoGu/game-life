@@ -1,5 +1,5 @@
 import { Application, Container, FillGradient, Graphics, Text } from 'pixi.js';
-import { COLS, dragPiece, EXIT, ROWS, type Piece } from '../../board.js';
+import { COLS, dragGroup, EXIT, ROWS, type Piece, type PieceMove } from '../../board.js';
 import { LEVELS, type KlotskiLevel } from '../../levels.js';
 
 export type KlotskiPhase = 'pick' | 'play' | 'done';
@@ -17,7 +17,7 @@ export interface KlotskiSceneState {
 
 export interface KlotskiSceneHandlers {
   onPick: (level: KlotskiLevel) => void;
-  onPlace: (id: string, x: number, y: number) => void;
+  onPlace: (id: string, moves: PieceMove[], steps: number) => void;
   onUndo: () => void;
   onReset: () => void;
   onReplay: () => void;
@@ -120,7 +120,14 @@ export class KlotskiScene {
   };
   private width = 320;
   private built = '';
-  private drag: { id: string; grabX: number; grabY: number } | null = null;
+  private drag: {
+    id: string;
+    grabX: number;
+    grabY: number;
+    moves: PieceMove[];
+    traveled: number;
+    last: Map<string, { x: number; y: number }>;
+  } | null = null;
 
   private constructor(app: Application) {
     this.app = app;
@@ -176,12 +183,11 @@ export class KlotskiScene {
 
   private refresh() {
     if (this.state.phase === 'pick') return;
-    const header = this.root.getChildByLabel('clock');
-    if (header instanceof Text) header.text = this.headerText();
+    this.syncHeader();
     const board = this.root.getChildByLabel('board');
     if (!board) return;
     for (const piece of this.state.pieces) {
-      if (piece.id === this.drag?.id) continue;
+      if (this.drag && (piece.id === this.drag.id || this.drag.moves.some((move) => move.id === piece.id))) continue;
       const view = board.getChildByLabel(piece.id);
       if (!view) continue;
       view.position.set(piece.x * this.cell, piece.y * this.cell);
@@ -292,35 +298,69 @@ export class KlotskiScene {
     root.eventMode = 'static';
     root.cursor = 'pointer';
     root.on('pointerdown', (event) => {
-      if (!root.parent) return;
+      if (this.drag || !root.parent) return;
       const local = root.parent.toLocal(event.global);
-      this.drag = { id: piece.id, grabX: local.x - root.position.x, grabY: local.y - root.position.y };
+      this.drag = {
+        id: piece.id,
+        grabX: local.x - root.position.x,
+        grabY: local.y - root.position.y,
+        moves: [],
+        traveled: 0,
+        last: new Map(this.state.pieces.map((item) => [item.id, { x: item.x, y: item.y }])),
+      };
     });
     root.on('globalpointermove', (event) => {
       if (this.drag?.id !== piece.id || !root.parent) return;
       const local = root.parent.toLocal(event.global);
       const towardX = Math.round((local.x - this.drag.grabX) / cell);
       const towardY = Math.round((local.y - this.drag.grabY) / cell);
-      const next = dragPiece(this.state.pieces, piece.id, towardX, towardY);
-      root.position.set(next.x * cell, next.y * cell);
+      const moves = dragGroup(this.state.pieces, piece.id, towardX, towardY);
+      this.drag.moves = moves;
+      for (const item of this.state.pieces) {
+        const view = root.parent.getChildByLabel(item.id);
+        if (!view) continue;
+        const move = moves.find((candidate) => candidate.id === item.id);
+        const x = move?.x ?? item.x;
+        const y = move?.y ?? item.y;
+        const previous = this.drag.last.get(item.id) ?? { x: item.x, y: item.y };
+        this.drag.traveled += Math.abs(x - previous.x) + Math.abs(y - previous.y);
+        this.drag.last.set(item.id, { x, y });
+        view.position.set(x * cell, y * cell);
+      }
+      this.syncHeader();
     });
     const finish = () => {
-      if (this.drag?.id !== piece.id) return;
-      const x = Math.round(root.position.x / cell);
-      const y = Math.round(root.position.y / cell);
-      const current = this.state.pieces.find((item) => item.id === piece.id);
+      if (this.drag?.id !== piece.id || !root.parent) return;
+      const moves = this.drag.moves;
+      const steps = this.drag.traveled;
+      const changed = moves.some((move) => {
+        const current = this.state.pieces.find((item) => item.id === move.id);
+        return current && (current.x !== move.x || current.y !== move.y);
+      });
       this.drag = null;
-      if (current && (x !== current.x || y !== current.y)) this.handlers.onPlace(piece.id, x, y);
-      else if (current) root.position.set(current.x * cell, current.y * cell);
+      this.syncHeader();
+      if (changed && steps > 0) this.handlers.onPlace(piece.id, moves, steps);
+      else {
+        for (const item of this.state.pieces) {
+          const view = root.parent.getChildByLabel(item.id);
+          view?.position.set(item.x * cell, item.y * cell);
+        }
+      }
     };
     root.on('pointerup', finish);
     root.on('pointerupoutside', finish);
     return root;
   }
 
+  private syncHeader() {
+    const header = this.root.getChildByLabel('clock');
+    if (header instanceof Text) header.text = this.headerText();
+  }
+
   private headerText() {
+    const steps = this.state.steps + (this.drag?.traveled ?? 0);
     if (this.state.phase === 'done') return `${this.state.levelName}    过关 ${this.state.steps} 步`;
-    return `${this.state.levelName}    ${this.state.steps} 步    ${this.state.clockText}`;
+    return `${this.state.levelName}    ${steps} 步    ${this.state.clockText}`;
   }
 
   private get cell() {
