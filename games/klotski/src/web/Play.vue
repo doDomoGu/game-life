@@ -152,15 +152,16 @@ onMounted(async () => {
     }
     created.setHandlers({ onPick: begin, onPlace, onUndo, onReset, onReplay: backToPick });
     scene.value = created;
-    created.resize(hostEl.clientWidth || 320);
+    fitScene(hostEl);
     created.setState(sceneState());
     observer = new ResizeObserver((entries) => {
-      const width = entries[0]?.contentRect.width ?? 0;
-      if (width <= 0) return;
+      const box = entries[0]?.contentRect;
+      if (!box || box.width <= 0) return;
       if (resizeRaf) cancelAnimationFrame(resizeRaf);
       resizeRaf = requestAnimationFrame(() => {
         resizeRaf = 0;
-        scene.value?.resize(width);
+        const hostNow = host.value;
+        if (hostNow) fitScene(hostNow);
       });
     });
     observer.observe(hostEl);
@@ -170,8 +171,15 @@ onMounted(async () => {
   }
 });
 
+function fitScene(hostEl: HTMLElement) {
+  const width = KlotskiScene.fitWidth(hostEl.clientWidth || 320, hostEl.clientHeight, phase.value);
+  scene.value?.resize(width);
+}
+
 watch(sceneState, (state) => {
   scene.value?.setState(state);
+  const hostEl = host.value;
+  if (hostEl) fitScene(hostEl);
 });
 
 onBeforeUnmount(() => {
@@ -198,6 +206,8 @@ onBeforeUnmount(() => {
 
 <style scoped>
 .klotski {
+  flex: 1;
+  min-height: 0;
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -207,8 +217,11 @@ onBeforeUnmount(() => {
   align-items: center;
 }
 .stage {
+  flex: 1;
+  min-height: 0;
   width: min(100%, 420px);
   margin: 0 auto;
+  overflow: hidden;
 }
 .stage canvas {
   display: block;

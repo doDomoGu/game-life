@@ -83,6 +83,19 @@ export class KlotskiScene {
     return 36 + cell * ROWS + 96;
   }
 
+  static fitWidth(maxWidth: number, maxHeight: number, phase: KlotskiPhase): number {
+    const width = Math.max(160, Math.floor(maxWidth));
+    if (maxHeight <= 0 || this.heightFor(width, phase) <= maxHeight) return width;
+    let low = 160;
+    let high = width;
+    for (let step = 0; step < 16; step += 1) {
+      const mid = Math.floor((low + high) / 2);
+      if (this.heightFor(mid, phase) > maxHeight) high = mid;
+      else low = mid;
+    }
+    return low;
+  }
+
   static async create(canvas: HTMLCanvasElement): Promise<KlotskiScene> {
     const app = new Application();
     await app.init({

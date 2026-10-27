@@ -4,6 +4,7 @@ import type { WebGamePlugin } from '@game-life/shared';
 import App from './App.vue';
 import { registerWebGames } from './games/registry.js';
 import { createAppRouter } from './router/index.js';
+import { installBrowserChrome } from './shell/browserChrome.js';
 import './styles/mobile.css';
 
 export type { WebGamePlugin } from '@game-life/shared';
@@ -19,6 +20,7 @@ export interface CreatePlatformAppOptions {
 }
 
 export function createPlatformApp(options: CreatePlatformAppOptions) {
+  installBrowserChrome();
   registerWebGames(options.games);
   const app = createApp(App);
   app.use(createPinia());

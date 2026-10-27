@@ -53,6 +53,19 @@ export class SudokuScene {
     return width + 168;
   }
 
+  static fitWidth(maxWidth: number, maxHeight: number, phase: SudokuPhase): number {
+    const width = Math.max(180, Math.floor(maxWidth));
+    if (maxHeight <= 0 || this.heightFor(width, phase) <= maxHeight) return width;
+    let low = 180;
+    let high = width;
+    for (let step = 0; step < 16; step += 1) {
+      const mid = Math.floor((low + high) / 2);
+      if (this.heightFor(mid, phase) > maxHeight) high = mid;
+      else low = mid;
+    }
+    return low;
+  }
+
   static async create(canvas: HTMLCanvasElement): Promise<SudokuScene> {
     const app = new Application();
     await app.init({

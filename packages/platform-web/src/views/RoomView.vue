@@ -237,4 +237,16 @@ h2 {
   width: 100%;
   margin-top: 14px;
 }
+.room:has(.room-stage) {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.room-stage {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
 </style>
