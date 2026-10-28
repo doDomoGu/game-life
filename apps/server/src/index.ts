@@ -8,6 +8,7 @@ import { hanabiServerPlugin } from '@game-life/game-hanabi/server';
 import { pokerMemoryServerPlugin } from '@game-life/game-poker-memory/server';
 import { klotskiServerPlugin } from '@game-life/game-klotski/server';
 import { sudokuServerPlugin } from '@game-life/game-sudoku/server';
+import { mahjongWindServerPlugin } from '@game-life/game-mahjong-wind/server';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const dataDir = process.env.DATA_DIR
@@ -18,7 +19,7 @@ const webDist = process.env.WEB_DIST
   : path.resolve(__dirname, '../../web/dist');
 
 await createServer({
-  games: [pokerMemoryServerPlugin, bingoServerPlugin, hanabiServerPlugin, drawGuessServerPlugin, sudokuServerPlugin, klotskiServerPlugin],
+  games: [pokerMemoryServerPlugin, bingoServerPlugin, hanabiServerPlugin, drawGuessServerPlugin, sudokuServerPlugin, klotskiServerPlugin, mahjongWindServerPlugin],
   dataDir,
   jwtSecret: process.env.JWT_SECRET,
   port: process.env.PORT ? Number(process.env.PORT) : undefined,

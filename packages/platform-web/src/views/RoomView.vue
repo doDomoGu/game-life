@@ -93,6 +93,7 @@ provide(ROOM_PLAY_KEY, {
   async complete() {
     room.value = await finishRoom(code.value);
   },
+  exit: onExitGame,
 });
 
 watch(
@@ -170,7 +171,12 @@ onUnmounted(() => {
         <div class="room-stage">
           <component :is="playComponent" v-if="playComponent" />
         </div>
-        <button v-if="room.status === 'finished'" type="button" class="btn start" @click="onExitGame">
+        <button
+          v-if="room.status === 'finished' && !selectedGame?.exitInGame"
+          type="button"
+          class="btn start"
+          @click="onExitGame"
+        >
           退出游戏
         </button>
       </template>

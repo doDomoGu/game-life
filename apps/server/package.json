@@ -18,6 +18,7 @@
     "@game-life/game-poker-memory": "workspace:*",
     "@game-life/game-sudoku": "workspace:*",
     "@game-life/game-klotski": "workspace:*",
+    "@game-life/game-mahjong-wind": "workspace:*",
     "@game-life/platform-server": "workspace:*",
     "@game-life/shared": "workspace:*"
   },

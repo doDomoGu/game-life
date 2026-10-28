@@ -17,6 +17,7 @@
     "@game-life/game-poker-memory": "workspace:*",
     "@game-life/game-sudoku": "workspace:*",
     "@game-life/game-klotski": "workspace:*",
+    "@game-life/game-mahjong-wind": "workspace:*",
     "@game-life/platform-web": "workspace:*",
     "@game-life/shared": "workspace:*",
     "axios": "^1.11.0",

@@ -49,6 +49,11 @@ function formatTime(iso: string) {
   });
 }
 
+function formatPt(value: unknown) {
+  const pt = Math.round(Number(value ?? 0) * 10) / 10;
+  return `${pt > 0 ? '+' : ''}${Number.isInteger(pt) ? pt : pt.toFixed(1)}`;
+}
+
 function formatDuration(ms?: number) {
   if (ms == null) return '—';
   const sec = Math.round(ms / 1000);
@@ -115,6 +120,13 @@ watch(gameId, loadRecords);
           <span v-if="game?.intro.recordStyle === 'score'" class="score">{{ row.rawScore }} 分</span>
           <span v-else-if="game?.intro.recordStyle === 'time'" class="score">{{ formatDuration(row.durationMs ?? row.rawScore * 1000) }}</span>
           <span v-else-if="row.meta?.kind === 'klotski'" class="score">{{ row.rawScore }} 步</span>
+          <span
+            v-else-if="row.meta?.kind === 'mahjong-wind'"
+            class="score"
+            :class="{ 'score--loss': row.meta?.won !== true }"
+          >
+            第 {{ row.meta?.rank }} 位 · {{ row.rawScore }} 点 · {{ formatPt(row.meta?.pt) }} pt
+          </span>
           <span v-else-if="isMatchRecord(row)" class="score" :class="{ 'score--loss': row.meta?.won !== true }">
             {{ row.meta?.won === true ? '胜' : '负' }}
           </span>

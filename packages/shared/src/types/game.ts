@@ -57,6 +57,8 @@ export interface WebGamePlugin extends GameMeta {
   playRouteName?: string;
   playRoutePath?: string;
   loadPlay?: () => Promise<unknown>;
+  /** 对局画面自己提供「回到房间」，房间页不再显示「退出游戏」 */
+  exitInGame?: boolean;
   /** 游戏自定义页面（房间大厅等） */
   extraRoutes?: WebGameExtraRoute[];
 }

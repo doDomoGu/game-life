@@ -18,6 +18,7 @@ export default defineConfig(({ mode }) => {
         '@game-life/game-poker-memory': path.resolve(__dirname, '../../games/poker-memory/src'),
         '@game-life/game-sudoku': path.resolve(__dirname, '../../games/sudoku/src'),
         '@game-life/game-klotski': path.resolve(__dirname, '../../games/klotski/src'),
+        '@game-life/game-mahjong-wind': path.resolve(__dirname, '../../games/mahjong-wind/src'),
       },
     },
     optimizeDeps: {
