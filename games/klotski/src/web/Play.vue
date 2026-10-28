@@ -6,12 +6,23 @@ import { clonePieces, isWin, placeGroup, type Piece, type PieceMove } from '../b
 import { freshPieces, type KlotskiLevel } from '../levels.js';
 import { KLOTSKI_GAME_ID } from '../meta.js';
 import { klotskiRoutes } from '../routes.js';
-import { KlotskiScene, type KlotskiSceneState } from './scene/KlotskiScene.js';
+import { solve } from '../solver.js';
+import {
+  KlotskiScene,
+  type KlotskiDemoStatus,
+  type KlotskiPhase,
+  type KlotskiSceneState,
+} from './scene/KlotskiScene.js';
 
 const router = useRouter();
 const roomPlay = inject<RoomPlayContext | null>(ROOM_PLAY_KEY, null);
 
-const phase = ref<'pick' | 'play' | 'done'>('pick');
+const DEMO_STEP_MS = 1000;
+
+const phase = ref<KlotskiPhase>('pick');
+const demoStatus = ref<KlotskiDemoStatus>('solving');
+let demoTimer: ReturnType<typeof setTimeout> | null = null;
+let demoRun = 0;
 const level = ref<KlotskiLevel | null>(null);
 const pieces = ref<Piece[]>([]);
 const history = ref<Array<{ pieces: Piece[]; steps: number }>>([]);
@@ -42,20 +53,29 @@ function stopTimer() {
   timer = null;
 }
 
+function stopDemo() {
+  demoRun += 1;
+  if (demoTimer) clearTimeout(demoTimer);
+  demoTimer = null;
+}
+
 function sceneState(): KlotskiSceneState {
   return {
     phase: phase.value,
     levelName: level.value?.name ?? '',
+    minSteps: level.value?.minSteps ?? 0,
     pieces: pieces.value,
     steps: steps.value,
     clockText: clockText.value,
     submitting: submitting.value,
     submitError: submitError.value,
     showReplay: phase.value === 'done',
+    demoStatus: demoStatus.value,
   };
 }
 
 function begin(next: KlotskiLevel) {
+  stopDemo();
   level.value = next;
   pieces.value = freshPieces(next);
   history.value = [];
@@ -95,11 +115,57 @@ function onUndo() {
 }
 
 function onReset() {
-  if (!level.value || phase.value !== 'play') return;
+  if (!level.value || (phase.value !== 'play' && phase.value !== 'demo')) return;
+  begin(level.value);
+}
+
+function onDemo() {
+  const current = level.value;
+  if (!current || phase.value !== 'play') return;
+  stopTimer();
+  stopDemo();
+  const run = demoRun;
+  pieces.value = freshPieces(current);
+  history.value = [];
+  steps.value = 0;
+  demoStatus.value = 'solving';
+  phase.value = 'demo';
+  // 先让「正在计算解法…」画出来，再做耗时的搜索
+  demoTimer = setTimeout(() => {
+    const plan = solve(pieces.value);
+    if (run !== demoRun) return;
+    if (!plan) {
+      demoStatus.value = 'finished';
+      return;
+    }
+    demoStatus.value = 'running';
+    let index = 0;
+    const tick = () => {
+      if (run !== demoRun) return;
+      const step = plan[index];
+      if (!step) {
+        demoStatus.value = 'finished';
+        demoTimer = null;
+        return;
+      }
+      pieces.value = pieces.value.map((piece) =>
+        piece.id === step.id ? { ...piece, x: piece.x + step.dx, y: piece.y + step.dy } : piece,
+      );
+      steps.value += 1;
+      index += 1;
+      demoTimer = setTimeout(tick, index < plan.length ? DEMO_STEP_MS : 400);
+    };
+    demoTimer = setTimeout(tick, DEMO_STEP_MS);
+  }, 60);
+}
+
+function onStopDemo() {
+  if (!level.value || phase.value !== 'demo') return;
   begin(level.value);
 }
 
 function backToPick() {
+  stopDemo();
   stopTimer();
   phase.value = 'pick';
   level.value = null;
@@ -150,7 +216,15 @@ onMounted(async () => {
       created.destroy();
       return;
     }
-    created.setHandlers({ onPick: begin, onPlace, onUndo, onReset, onReplay: backToPick });
+    created.setHandlers({
+      onPick: begin,
+      onPlace,
+      onUndo,
+      onReset,
+      onReplay: backToPick,
+      onDemo,
+      onStopDemo,
+    });
     scene.value = created;
     fitScene(hostEl);
     created.setState(sceneState());
@@ -185,6 +259,7 @@ watch(sceneState, (state) => {
 onBeforeUnmount(() => {
   disposed = true;
   stopTimer();
+  stopDemo();
   if (resizeRaf) cancelAnimationFrame(resizeRaf);
   observer?.disconnect();
   scene.value?.destroy();

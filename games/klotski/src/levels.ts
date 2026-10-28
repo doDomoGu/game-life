@@ -3,6 +3,8 @@ import { clonePieces, type Piece, type PieceKind } from './board.js';
 export interface KlotskiLevel {
   id: string;
   name: string;
+  /** 每颗棋子每走一格算一步时的最少步数，由 solver.ts 求出 */
+  minSteps: number;
   pieces: Piece[];
 }
 
@@ -12,7 +14,7 @@ type Block = [number, number, number, number];
 const VERTICAL = ['张飞', '赵云', '马超', '黄忠'];
 const HORIZONTAL = ['关羽', '黄忠', '马超'];
 
-function build(id: string, name: string, blocks: Block[]): KlotskiLevel {
+function build(id: string, name: string, minSteps: number, blocks: Block[]): KlotskiLevel {
   let vertical = 0;
   let horizontal = 0;
   let soldier = 0;
@@ -29,16 +31,16 @@ function build(id: string, name: string, blocks: Block[]): KlotskiLevel {
     const order = soldier++;
     return piece(`s${order}`, '兵', 'soldier', w, h, x, y);
   });
-  return { id, name, pieces };
+  return { id, name, minSteps, pieces };
 }
 
 function piece(id: string, name: string, kind: PieceKind, w: number, h: number, x: number, y: number): Piece {
   return { id, name, kind, w, h, x, y };
 }
 
-/** 十道经典布局，曹操都在顶上正中。坐标来自公开的华容道布局表。 */
-export const LEVELS: KlotskiLevel[] = [
-  build('jiezu', '捷足先登', [
+/** 十道经典布局，曹操都在顶上正中，按最少步数从少到多排列。坐标来自公开的华容道布局表。 */
+const CATALOG: KlotskiLevel[] = [
+  build('jiezu', '捷足先登', 47, [
     [2, 2, 0, 1],
     [2, 1, 3, 0],
     [2, 1, 3, 1],
@@ -50,7 +52,7 @@ export const LEVELS: KlotskiLevel[] = [
     [1, 1, 1, 0],
     [1, 1, 1, 3],
   ]),
-  build('bingfen', '兵分三路', [
+  build('bingfen', '兵分三路', 92, [
     [2, 2, 0, 1],
     [2, 1, 1, 0],
     [2, 1, 1, 3],
@@ -62,7 +64,7 @@ export const LEVELS: KlotskiLevel[] = [
     [1, 1, 3, 1],
     [1, 1, 3, 2],
   ]),
-  build('yilu', '一路顺风', [
+  build('yilu', '一路顺风', 49, [
     [2, 2, 0, 1],
     [2, 1, 0, 0],
     [2, 1, 2, 0],
@@ -74,7 +76,7 @@ export const LEVELS: KlotskiLevel[] = [
     [1, 1, 3, 1],
     [1, 1, 4, 1],
   ]),
-  build('yusheng', '雨声淅沥', [
+  build('yusheng', '雨声淅沥', 60, [
     [2, 2, 0, 1],
     [2, 1, 0, 0],
     [2, 1, 2, 0],
@@ -86,7 +88,7 @@ export const LEVELS: KlotskiLevel[] = [
     [1, 1, 4, 0],
     [1, 1, 4, 3],
   ]),
-  build('zuoyou', '左右布兵', [
+  build('zuoyou', '左右布兵', 78, [
     [2, 2, 0, 1],
     [2, 1, 2, 0],
     [2, 1, 2, 1],
@@ -98,7 +100,7 @@ export const LEVELS: KlotskiLevel[] = [
     [1, 1, 1, 0],
     [1, 1, 1, 3],
   ]),
-  build('qitou', '齐头并进', [
+  build('qitou', '齐头并进', 85, [
     [2, 2, 0, 1],
     [2, 1, 0, 0],
     [2, 1, 0, 3],
@@ -110,7 +112,7 @@ export const LEVELS: KlotskiLevel[] = [
     [1, 1, 2, 2],
     [1, 1, 2, 3],
   ]),
-  build('zhihui', '指挥若定', [
+  build('zhihui', '指挥若定', 100, [
     [2, 2, 0, 1],
     [2, 1, 0, 0],
     [2, 1, 0, 3],
@@ -122,7 +124,7 @@ export const LEVELS: KlotskiLevel[] = [
     [1, 1, 3, 1],
     [1, 1, 3, 2],
   ]),
-  build('jiangyong', '将拥曹营', [
+  build('jiangyong', '将拥曹营', 101, [
     [2, 2, 0, 1],
     [2, 1, 1, 0],
     [2, 1, 1, 3],
@@ -134,7 +136,7 @@ export const LEVELS: KlotskiLevel[] = [
     [1, 1, 4, 2],
     [1, 1, 4, 3],
   ]),
-  build('hengdao', '横刀立马', [
+  build('hengdao', '横刀立马', 116, [
     [2, 2, 0, 1],
     [2, 1, 0, 0],
     [2, 1, 0, 3],
@@ -146,7 +148,7 @@ export const LEVELS: KlotskiLevel[] = [
     [1, 1, 4, 0],
     [1, 1, 4, 3],
   ]),
-  build('cengceng', '层层设防', [
+  build('cengceng', '层层设防', 138, [
     [2, 2, 0, 1],
     [2, 1, 0, 0],
     [2, 1, 0, 3],
@@ -159,6 +161,8 @@ export const LEVELS: KlotskiLevel[] = [
     [1, 1, 3, 3],
   ]),
 ];
+
+export const LEVELS: KlotskiLevel[] = [...CATALOG].sort((a, b) => a.minSteps - b.minSteps);
 
 export function levelById(id: string) {
   return LEVELS.find((level) => level.id === id) ?? null;

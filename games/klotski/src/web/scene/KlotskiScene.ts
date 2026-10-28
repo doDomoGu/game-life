@@ -2,17 +2,20 @@ import { Application, Container, FillGradient, Graphics, Text } from 'pixi.js';
 import { COLS, dragGroup, EXIT, ROWS, type Piece, type PieceMove } from '../../board.js';
 import { LEVELS, type KlotskiLevel } from '../../levels.js';
 
-export type KlotskiPhase = 'pick' | 'play' | 'done';
+export type KlotskiPhase = 'pick' | 'play' | 'demo' | 'done';
+export type KlotskiDemoStatus = 'solving' | 'running' | 'finished';
 
 export interface KlotskiSceneState {
   phase: KlotskiPhase;
   levelName: string;
+  minSteps: number;
   pieces: Piece[];
   steps: number;
   clockText: string;
   submitting: boolean;
   submitError: string;
   showReplay: boolean;
+  demoStatus: KlotskiDemoStatus;
 }
 
 export interface KlotskiSceneHandlers {
@@ -21,6 +24,8 @@ export interface KlotskiSceneHandlers {
   onUndo: () => void;
   onReset: () => void;
   onReplay: () => void;
+  onDemo: () => void;
+  onStopDemo: () => void;
 }
 
 const FONT = 'system-ui, -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif';
@@ -117,12 +122,14 @@ export class KlotskiScene {
   private state: KlotskiSceneState = {
     phase: 'pick',
     levelName: '',
+    minSteps: 0,
     pieces: [],
     steps: 0,
     clockText: '',
     submitting: false,
     submitError: '',
     showReplay: false,
+    demoStatus: 'solving',
   };
   private handlers: KlotskiSceneHandlers = {
     onPick: () => undefined,
@@ -130,9 +137,12 @@ export class KlotskiScene {
     onUndo: () => undefined,
     onReset: () => undefined,
     onReplay: () => undefined,
+    onDemo: () => undefined,
+    onStopDemo: () => undefined,
   };
   private width = 320;
   private built = '';
+  private readonly targets = new Map<string, { x: number; y: number }>();
   private drag: {
     id: string;
     grabX: number;
@@ -151,7 +161,30 @@ export class KlotskiScene {
       ],
     });
     app.stage.addChild(this.root);
+    app.ticker.add(this.glide);
   }
+
+  private readonly glide = (ticker: { deltaMS: number }) => {
+    if (this.drag || this.targets.size === 0) return;
+    const board = this.root.getChildByLabel('board');
+    if (!board) return;
+    const ease = Math.min(1, ticker.deltaMS / 90);
+    for (const [id, target] of this.targets) {
+      const view = board.getChildByLabel(id);
+      if (!view) {
+        this.targets.delete(id);
+        continue;
+      }
+      const dx = target.x - view.position.x;
+      const dy = target.y - view.position.y;
+      if (Math.abs(dx) < 0.5 && Math.abs(dy) < 0.5) {
+        view.position.set(target.x, target.y);
+        this.targets.delete(id);
+        continue;
+      }
+      view.position.set(view.position.x + dx * ease, view.position.y + dy * ease);
+    }
+  };
 
   setHandlers(handlers: KlotskiSceneHandlers) {
     this.handlers = handlers;
@@ -159,7 +192,8 @@ export class KlotskiScene {
 
   setState(state: KlotskiSceneState) {
     this.state = state;
-    const key = `${state.phase}:${this.width}:${state.levelName}:${state.submitting}:${state.submitError}:${state.showReplay}`;
+    const demo = state.phase === 'demo' ? state.demoStatus : '';
+    const key = `${state.phase}:${demo}:${this.width}:${state.levelName}:${state.submitting}:${state.submitError}:${state.showReplay}`;
     if (key !== this.built) {
       this.drag = null;
       this.built = key;
@@ -178,6 +212,8 @@ export class KlotskiScene {
   }
 
   destroy() {
+    this.app.ticker.remove(this.glide);
+    this.targets.clear();
     this.clearRoot();
     this.app.destroy({ removeView: false }, { children: true });
   }
@@ -188,6 +224,7 @@ export class KlotskiScene {
   }
 
   private rebuild() {
+    this.targets.clear();
     this.clearRoot();
     this.app.renderer.resize(this.width, KlotskiScene.heightFor(this.width, this.state.phase));
     if (this.state.phase === 'pick') this.drawPick();
@@ -203,7 +240,9 @@ export class KlotskiScene {
       if (this.drag && (piece.id === this.drag.id || this.drag.moves.some((move) => move.id === piece.id))) continue;
       const view = board.getChildByLabel(piece.id);
       if (!view) continue;
-      view.position.set(piece.x * this.cell, piece.y * this.cell);
+      const x = piece.x * this.cell;
+      const y = piece.y * this.cell;
+      if (view.position.x !== x || view.position.y !== y) this.targets.set(piece.id, { x, y });
     }
   }
 
@@ -215,7 +254,7 @@ export class KlotskiScene {
     this.root.addChild(title);
     const colW = (this.width - 10) / 2;
     LEVELS.forEach((level, index) => {
-      const button = this.button(colW, 56, level.name, true);
+      const button = this.button(colW, 56, level.name, true, `最少 ${level.minSteps} 步`);
       button.position.set((index % 2) * (colW + 10), 44 + Math.floor(index / 2) * 72);
       button.on('pointertap', () => this.handlers.onPick(level));
       this.root.addChild(button);
@@ -225,7 +264,7 @@ export class KlotskiScene {
   private drawBoard() {
     const header = new Text({
       text: this.headerText(),
-      style: { fontFamily: FONT, fontSize: 16, fontWeight: '700', fill: COLOR.cream },
+      style: { fontFamily: FONT, fontSize: 15, fontWeight: '700', fill: COLOR.cream },
     });
     header.label = 'clock';
     this.root.addChild(header);
@@ -251,23 +290,49 @@ export class KlotskiScene {
     }
     this.root.addChild(board);
 
+    const barY = 32 + cell * ROWS + 36;
     if (this.state.phase === 'play') {
-      const undo = this.button(this.width / 2 - 6, 48, '撤销', false);
-      const reset = this.button(this.width / 2 - 6, 48, '重来', false);
-      undo.position.set(0, 32 + cell * ROWS + 36);
-      reset.position.set(this.width / 2 + 6, 32 + cell * ROWS + 36);
+      const third = (this.width - 16) / 3;
+      const undo = this.button(third, 48, '撤销', false);
+      const reset = this.button(third, 48, '重来', false);
+      const demo = this.button(third, 48, '演示', true);
+      undo.position.set(0, barY);
+      reset.position.set(third + 8, barY);
+      demo.position.set((third + 8) * 2, barY);
       undo.on('pointertap', () => {
         if (!this.drag) this.handlers.onUndo();
       });
       reset.on('pointertap', () => {
         if (!this.drag) this.handlers.onReset();
       });
-      this.root.addChild(undo, reset);
+      demo.on('pointertap', () => {
+        if (!this.drag) this.handlers.onDemo();
+      });
+      this.root.addChild(undo, reset, demo);
+      return;
+    }
+
+    if (this.state.phase === 'demo') {
+      if (this.state.demoStatus === 'finished') {
+        const half = this.width / 2 - 6;
+        const reset = this.button(half, 48, '自己来', false);
+        const pick = this.button(half, 48, '重开一局', true);
+        reset.position.set(0, barY);
+        pick.position.set(half + 12, barY);
+        reset.on('pointertap', () => this.handlers.onReset());
+        pick.on('pointertap', () => this.handlers.onReplay());
+        this.root.addChild(reset, pick);
+        return;
+      }
+      const stop = this.button(this.width, 48, '停止演示', false);
+      stop.position.set(0, barY);
+      stop.on('pointertap', () => this.handlers.onStopDemo());
+      this.root.addChild(stop);
       return;
     }
 
     const done = new Text({
-      text: this.state.submitting ? '正在保存…' : `过关 · ${this.state.steps} 步`,
+      text: this.state.submitting ? '正在保存…' : `过关 · ${this.state.steps} 步（最少 ${this.state.minSteps} 步）`,
       style: { fontFamily: FONT, fontSize: 16, fontWeight: '700', fill: COLOR.cream },
     });
     done.position.set(0, 32 + cell * ROWS + 18);
@@ -371,16 +436,22 @@ export class KlotskiScene {
   }
 
   private headerText() {
+    const { levelName, minSteps, phase, demoStatus } = this.state;
     const steps = this.state.steps + (this.drag?.traveled ?? 0);
-    if (this.state.phase === 'done') return `${this.state.levelName}    过关 ${this.state.steps} 步`;
-    return `${this.state.levelName}    ${steps} 步    ${this.state.clockText}`;
+    if (phase === 'done') return `${levelName}   过关 ${steps} 步 · 最少 ${minSteps}`;
+    if (phase === 'demo') {
+      if (demoStatus === 'solving') return `${levelName}   正在计算解法…`;
+      if (demoStatus === 'finished') return `${levelName}   演示完成 · ${steps} 步`;
+      return `${levelName}   演示 ${steps} / ${minSteps} 步`;
+    }
+    return `${levelName}   ${steps} 步 · 最少 ${minSteps}   ${this.state.clockText}`;
   }
 
   private get cell() {
     return this.width / COLS;
   }
 
-  private button(width: number, height: number, caption: string, gold: boolean) {
+  private button(width: number, height: number, caption: string, gold: boolean, note?: string) {
     const root = new Container();
     const bg = new Graphics();
     bg.roundRect(0, 0, width, height, 14).fill(gold ? this.gold : COLOR.key);
@@ -394,8 +465,17 @@ export class KlotskiScene {
       },
     });
     label.anchor.set(0.5);
-    label.position.set(width / 2, height / 2);
+    label.position.set(width / 2, note ? height / 2 - 8 : height / 2);
     root.addChild(bg, label);
+    if (note) {
+      const sub = new Text({
+        text: note,
+        style: { fontFamily: FONT, fontSize: 12, fontWeight: '600', fill: gold ? 0x6b4a1c : COLOR.cream },
+      });
+      sub.anchor.set(0.5);
+      sub.position.set(width / 2, height / 2 + 12);
+      root.addChild(sub);
+    }
     root.eventMode = 'static';
     root.cursor = 'pointer';
     return root;
