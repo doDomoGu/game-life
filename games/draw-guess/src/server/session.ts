@@ -314,9 +314,11 @@ function broadcastSoon(session: Session): void {
   }, 40);
 }
 
-function assertDrawing(session: Session, userId: string): void {
-  if (session.phase !== 'draw') fail('本轮已经结束');
+/** 回合已结束时丢掉迟到的笔画。猜对会立刻收笔，画手的下一点还在路上 */
+function drawingOpen(session: Session, userId: string): boolean {
+  if (session.phase !== 'draw') return false;
   if (userId !== session.drawerId) fail('只有画手可以画');
+  return true;
 }
 
 function pointOf(value: unknown): { x: number; y: number } | null {
@@ -342,7 +344,7 @@ export function applyMessage(code: string, userId: string, message: { type?: str
     message.payload && typeof message.payload === 'object' ? (message.payload as Record<string, unknown>) : {};
 
   if (message.type === 'stroke:start') {
-    assertDrawing(session, userId);
+    if (!drawingOpen(session, userId)) return;
     if (session.strokes.length >= 400) fail('笔画太多了');
     const id = String(payload.id ?? '');
     if (!id || session.strokes.some((stroke) => stroke.id === id)) fail('笔画无效');
@@ -360,7 +362,7 @@ export function applyMessage(code: string, userId: string, message: { type?: str
   }
 
   if (message.type === 'stroke:point') {
-    assertDrawing(session, userId);
+    if (!drawingOpen(session, userId)) return;
     const stroke = session.strokes.find((item) => item.id === String(payload.id ?? ''));
     const point = pointOf(payload);
     if (!stroke || !point) return;
@@ -371,21 +373,21 @@ export function applyMessage(code: string, userId: string, message: { type?: str
   }
 
   if (message.type === 'undo') {
-    assertDrawing(session, userId);
+    if (!drawingOpen(session, userId)) return;
     session.strokes.pop();
     broadcast(session);
     return;
   }
 
   if (message.type === 'clear') {
-    assertDrawing(session, userId);
+    if (!drawingOpen(session, userId)) return;
     session.strokes = [];
     broadcast(session);
     return;
   }
 
   if (message.type === 'guess') {
-    if (session.phase !== 'draw') fail('本轮已经结束');
+    if (session.phase !== 'draw') return;
     if (userId === session.drawerId) fail('画手不能猜');
     if (player.correct) fail('你已经猜对了');
     const text = String(payload.text ?? '').trim();

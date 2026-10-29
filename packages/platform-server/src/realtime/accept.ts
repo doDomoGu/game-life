@@ -96,9 +96,13 @@ export async function acceptPlayerSocket(options: AcceptPlayerSocketOptions): Pr
       sendJson(options.socket, 'pong', { t: Date.now() });
       return;
     }
-    void Promise.resolve(options.onMessage(userId, message)).catch((err: unknown) => {
+    try {
+      void Promise.resolve(options.onMessage(userId, message)).catch((err: unknown) => {
+        sendJson(options.socket, 'error', { message: errorMessage(err) });
+      });
+    } catch (err) {
       sendJson(options.socket, 'error', { message: errorMessage(err) });
-    });
+    }
   });
 
   options.socket.on('close', () => {

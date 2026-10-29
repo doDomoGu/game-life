@@ -20,7 +20,7 @@ const error = ref('');
 const connection = ref<ConnectionState>('connecting');
 const color = ref<PenColor>(PEN_COLORS[0]);
 const tool = ref<'pen' | 'eraser'>('pen');
-const cells = ref<string[]>([]);
+const guessText = ref('');
 const clock = ref(Date.now());
 const offset = ref(0);
 const canvasEl = ref<HTMLCanvasElement | null>(null);
@@ -60,23 +60,10 @@ function syncClock(next: DrawGuessView): void {
   offset.value = next.serverNow - Date.now();
 }
 
-function resetCells(length: number): void {
-  cells.value = Array.from({ length }, () => '');
-}
-
 watch(
-  () =>
-    view.value
-      ? `${view.value.roundIndex}:${view.value.phase}:${view.value.word ?? ''}:${view.value.wordLength}`
-      : '',
+  () => (view.value ? `${view.value.roundIndex}:${view.value.phase}` : ''),
   () => {
-    const current = view.value;
-    if (!current) return;
-    if (current.word && (isDrawer.value || me.value?.correct || current.phase !== 'draw')) {
-      cells.value = [...current.word];
-      return;
-    }
-    if (cells.value.length !== current.wordLength) resetCells(current.wordLength);
+    guessText.value = '';
   },
 );
 
@@ -143,36 +130,22 @@ function clearCanvas(): void {
   send({ type: 'clear' });
 }
 
-function onCellInput(index: number, event: Event): void {
-  const input = event.target as HTMLInputElement;
-  const chars = [...input.value].filter((char) => /[\u4e00-\u9fff]/.test(char));
-  const next = chars[chars.length - 1] ?? '';
-  cells.value[index] = next;
-  input.value = next;
-  if (next) focusCell(index + 1);
-}
-
-function onCellKey(index: number, event: KeyboardEvent): void {
-  if (event.key === 'Backspace' && !cells.value[index]) {
-    focusCell(index - 1);
-  }
-  if (event.key === 'Enter') submitGuess();
-}
-
-function focusCell(index: number): void {
-  const form = canvasEl.value?.parentElement?.querySelectorAll<HTMLInputElement>('.cell') ?? [];
-  form[index]?.focus();
+function onGuessEnter(event: KeyboardEvent): void {
+  if (event.isComposing) event.preventDefault();
 }
 
 function submitGuess(): void {
   if (!canGuess.value) return;
-  if (cells.value.some((cell) => !cell)) {
-    error.value = '请填满每一格';
+  const text = guessText.value.trim();
+  const expected = view.value?.wordLength ?? 0;
+  const chars = [...text];
+  if (chars.length !== expected || chars.some((char) => !/[\u4e00-\u9fff]/.test(char))) {
+    error.value = `请输入 ${expected} 个汉字`;
     return;
   }
   error.value = '';
-  send({ type: 'guess', payload: { text: cells.value.join('') } });
-  if (view.value) resetCells(view.value.wordLength);
+  send({ type: 'guess', payload: { text } });
+  guessText.value = '';
 }
 
 function paint(): void {
@@ -331,15 +304,14 @@ onBeforeUnmount(() => {
 
       <form v-else-if="view.phase === 'draw'" class="guess" @submit.prevent="submitGuess">
         <input
-          v-for="(_cell, index) in cells"
-          :key="index"
-          :value="cells[index]"
-          class="cell"
-          maxlength="2"
-          inputmode="text"
+          v-model="guessText"
+          class="guess-input"
+          type="text"
+          enterkeyhint="send"
+          autocomplete="off"
+          :placeholder="`输入 ${view.wordLength} 个字`"
           :disabled="!canGuess"
-          @input="onCellInput(index, $event)"
-          @keydown="onCellKey(index, $event)"
+          @keydown.enter="onGuessEnter"
         />
         <button type="submit" class="tool guess-btn" :disabled="!canGuess">猜</button>
       </form>
@@ -448,7 +420,7 @@ onBeforeUnmount(() => {
 }
 .swatch,
 .tool,
-.cell {
+.guess-input {
   min-height: 44px;
   border-radius: 10px;
   border: 2px solid transparent;
@@ -461,18 +433,19 @@ onBeforeUnmount(() => {
   border-color: var(--accent);
 }
 .tool,
-.cell {
+.guess-input {
   background: var(--surface);
   color: var(--text);
+}
+.guess-input {
+  flex: 1;
+  min-width: 0;
+  padding: 0 12px;
+  font-size: 16px;
 }
 .tool,
 .guess-btn {
   padding: 0 12px;
-}
-.cell {
-  width: 44px;
-  text-align: center;
-  font-size: 1.1rem;
 }
 .panel {
   display: flex;
