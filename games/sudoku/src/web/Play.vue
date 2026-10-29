@@ -1,9 +1,7 @@
 <script setup lang="ts">
 import { computed, inject, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue';
-import { useRouter } from 'vue-router';
 import { ROOM_PLAY_KEY, submitRecord, type RoomPlayContext } from '@game-life/platform-web';
 import { SUDOKU_GAME_ID } from '../meta.js';
-import { sudokuRoutes } from '../routes.js';
 import {
   difficultyLabel,
   generatePuzzle,
@@ -13,7 +11,6 @@ import {
 } from '../sudoku.js';
 import { SudokuScene, type SudokuSceneState } from './scene/SudokuScene.js';
 
-const router = useRouter();
 const roomPlay = inject<RoomPlayContext | null>(ROOM_PLAY_KEY, null);
 
 const phase = ref<'pick' | 'generating' | 'play' | 'done'>('pick');
@@ -129,14 +126,6 @@ watch(phase, async (next) => {
   }
 });
 
-function goBack() {
-  if (roomPlay) {
-    void router.push({ name: 'room', params: { code: roomPlay.code } });
-    return;
-  }
-  void router.push({ name: sudokuRoutes.introRouteName });
-}
-
 onMounted(async () => {
   const canvasEl = canvas.value;
   const hostEl = host.value;
@@ -196,10 +185,6 @@ onBeforeUnmount(() => {
 
 <template>
   <div class="sudo">
-    <header class="bar">
-      <button type="button" class="btn btn--ghost" @click="goBack">返回</button>
-    </header>
-
     <div ref="host" class="stage">
       <canvas ref="canvas"></canvas>
     </div>
@@ -214,12 +199,6 @@ onBeforeUnmount(() => {
   display: flex;
   flex-direction: column;
   gap: 12px;
-}
-.bar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
 }
 .muted {
   color: var(--muted);

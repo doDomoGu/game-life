@@ -3,7 +3,6 @@ import { inject, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { ROOM_PLAY_KEY, submitRecord, type RoomPlayContext } from '@game-life/platform-web';
 import { POKER_MEMORY_GAME_ID } from '@game-life/game-poker-memory/meta';
-import { pokerMemoryRoutes } from '../routes.js';
 import { usePokerMemory } from './usePokerMemory';
 import { suitColor, suitSymbol } from './deck';
 
@@ -51,14 +50,6 @@ watch(
   },
 );
 
-function goIntro() {
-  if (roomPlay) {
-    router.push({ name: 'room', params: { code: roomPlay.code } });
-    return;
-  }
-  router.push({ name: pokerMemoryRoutes.introRouteName });
-}
-
 function openHistory() {
   router.push({ name: 'game-history', params: { gameId: POKER_MEMORY_GAME_ID } });
 }
@@ -73,7 +64,6 @@ function playAgain() {
 <template>
   <div class="page play">
     <header class="play__header">
-      <button type="button" class="btn btn--ghost play__back" @click="goIntro">返回</button>
       <div class="play__stats">
         <span>翻开次数 <strong>{{ flipTurns }}</strong></span>
         <span>配对 <strong>{{ matchedPairs }}/{{ totalPairs }}</strong></span>
@@ -128,14 +118,9 @@ function playAgain() {
 .play__header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-end;
   gap: 12px;
   margin-bottom: 8px;
-}
-
-.play__back {
-  padding: 0 12px;
-  min-height: 40px;
 }
 
 .play__stats {

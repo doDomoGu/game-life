@@ -1,11 +1,9 @@
 <script setup lang="ts">
 import { computed, inject, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue';
-import { useRouter } from 'vue-router';
 import { ROOM_PLAY_KEY, submitRecord, type RoomPlayContext } from '@game-life/platform-web';
 import { clonePieces, isWin, placeGroup, type Piece, type PieceMove } from '../board.js';
 import { freshPieces, type KlotskiLevel } from '../levels.js';
 import { KLOTSKI_GAME_ID } from '../meta.js';
-import { klotskiRoutes } from '../routes.js';
 import { solve } from '../solver.js';
 import {
   KlotskiScene,
@@ -14,7 +12,6 @@ import {
   type KlotskiSceneState,
 } from './scene/KlotskiScene.js';
 
-const router = useRouter();
 const roomPlay = inject<RoomPlayContext | null>(ROOM_PLAY_KEY, null);
 
 const DEMO_STEP_MS = 1000;
@@ -198,14 +195,6 @@ watch(phase, async (next) => {
   }
 });
 
-function goBack() {
-  if (roomPlay) {
-    void router.push({ name: 'room', params: { code: roomPlay.code } });
-    return;
-  }
-  void router.push({ name: klotskiRoutes.introRouteName });
-}
-
 onMounted(async () => {
   const canvasEl = canvas.value;
   const hostEl = host.value;
@@ -269,9 +258,6 @@ onBeforeUnmount(() => {
 
 <template>
   <div class="klotski">
-    <header class="bar">
-      <button type="button" class="btn btn--ghost" @click="goBack">返回</button>
-    </header>
     <div ref="host" class="stage">
       <canvas ref="canvas"></canvas>
     </div>
@@ -286,10 +272,6 @@ onBeforeUnmount(() => {
   display: flex;
   flex-direction: column;
   gap: 12px;
-}
-.bar {
-  display: flex;
-  align-items: center;
 }
 .stage {
   flex: 1;

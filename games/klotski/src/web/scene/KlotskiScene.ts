@@ -38,46 +38,110 @@ const COLOR = {
   key: 0x172033,
 };
 
-const VERTICAL_COLORS = [0x243e73, 0x1e6b45, 0x5b3d8a, 0x8a4b22];
-const HORIZONTAL_COLORS = [0xc8962e, 0xb45309, 0x7c3a2d];
-const CAO_COLOR = 0x8e2a2a;
-const SOLDIER_COLOR = 0x8a7048;
-
-function pieceFill(piece: Piece) {
-  if (piece.kind === 'cao') return CAO_COLOR;
-  if (piece.kind === 'soldier') return SOLDIER_COLOR;
-  const order = Number(piece.id.slice(1)) || 0;
-  return piece.w === 2 ? HORIZONTAL_COLORS[order % HORIZONTAL_COLORS.length] : VERTICAL_COLORS[order % VERTICAL_COLORS.length];
+interface PieceLook {
+  robe: number;
+  robeLight: number;
+  trim: number;
+  face: number;
+  hair: number;
+  beard: 'long' | 'wide' | 'short' | 'white' | 'none';
+  hat: 'crown' | 'helmet' | 'cap' | 'plume';
+  labelDark: boolean;
 }
 
-function paintPiece(g: Graphics, piece: Piece, cell: number, fill: number) {
+function lookOf(piece: Piece): PieceLook {
+  switch (piece.name) {
+    case '曹操':
+      return { robe: 0x8e1d1d, robeLight: 0xc44545, trim: 0xe8c56b, face: 0xf0c9a0, hair: 0x1a120c, beard: 'short', hat: 'crown', labelDark: false };
+    case '关羽':
+      return { robe: 0x1b6a38, robeLight: 0x2f9a55, trim: 0xd4a24a, face: 0xe8a090, hair: 0x1a120c, beard: 'long', hat: 'cap', labelDark: false };
+    case '张飞':
+      return { robe: 0x241e18, robeLight: 0x4a4034, trim: 0xc4a46a, face: 0xd7a882, hair: 0x1a120c, beard: 'wide', hat: 'helmet', labelDark: false };
+    case '赵云':
+      return { robe: 0xd5dbe6, robeLight: 0xf7f9fc, trim: 0x9aa6b8, face: 0xf3d2b0, hair: 0x24180f, beard: 'none', hat: 'plume', labelDark: true };
+    case '马超':
+      return { robe: 0xf2eee3, robeLight: 0xfffaf2, trim: 0xc9a15b, face: 0xf0c9a0, hair: 0x24180f, beard: 'short', hat: 'helmet', labelDark: true };
+    case '黄忠':
+      return { robe: 0xa86b2a, robeLight: 0xd4924a, trim: 0xf0d7a0, face: 0xe8c4a4, hair: 0x8a8a8a, beard: 'white', hat: 'cap', labelDark: false };
+    default:
+      return { robe: 0x8a7048, robeLight: 0xb08a5c, trim: 0xe6d2a4, face: 0xf0c9a0, hair: 0x3a2e22, beard: 'none', hat: 'helmet', labelDark: false };
+  }
+}
+
+function paintPiece(g: Graphics, piece: Piece, cell: number) {
+  const look = lookOf(piece);
   const width = piece.w * cell;
   const height = piece.h * cell;
-  const inset = 4;
-  g.roundRect(inset, inset, width - inset * 2, height - inset * 2, 14)
-    .fill(fill)
-    .stroke({ width: 2, color: 0xf6e7c1, alpha: 0.9 });
-  const radius = Math.min(width, height) * (piece.kind === 'cao' ? 0.2 : 0.16);
+  const inset = 3;
+  const wood = new FillGradient({
+    end: { x: 0, y: 1 },
+    colorStops: [
+      { offset: 0, color: 0x6a4a2c },
+      { offset: 1, color: 0x2c1c12 },
+    ],
+  });
+  const lacquer = new FillGradient({
+    end: { x: 0, y: 1 },
+    colorStops: [
+      { offset: 0, color: look.robeLight },
+      { offset: 1, color: look.robe },
+    ],
+  });
+  g.roundRect(inset, inset, width - inset * 2, height - inset * 2, 12).fill(wood);
+  g.roundRect(inset + 4, inset + 4, width - inset * 2 - 8, height - inset * 2 - 8, 9)
+    .fill(lacquer)
+    .stroke({ width: 1.5, color: look.trim, alpha: 0.95 });
+
+  const radius = Math.min(width * 0.22, (height - 30) * 0.28);
   const cx = width / 2;
-  const cy = piece.kind === 'soldier' ? height * 0.4 : height * 0.36;
-  g.circle(cx, cy, radius).fill(0xf0c9a0);
-  g.circle(cx - radius * 0.34, cy - radius * 0.08, Math.max(1.5, radius * 0.08)).fill(0x1c140c);
-  g.circle(cx + radius * 0.34, cy - radius * 0.08, Math.max(1.5, radius * 0.08)).fill(0x1c140c);
-  if (piece.kind === 'cao') {
-    g.moveTo(cx - radius, cy - radius * 0.55)
-      .lineTo(cx - radius * 0.45, cy - radius * 1.65)
-      .lineTo(cx, cy - radius * 0.85)
-      .lineTo(cx + radius * 0.45, cy - radius * 1.65)
-      .lineTo(cx + radius, cy - radius * 0.55)
+  const cy = Math.min(height * 0.38, height - 36 - radius);
+  g.roundRect(cx - radius * 1.25, cy + radius * 0.45, radius * 2.5, radius * 1.45, radius * 0.4).fill(look.robe);
+  g.roundRect(cx - radius * 0.85, cy + radius * 0.62, radius * 1.7, radius * 0.28, 3).fill(look.trim);
+  g.circle(cx, cy, radius).fill(look.face);
+  const eye = Math.max(1.4, radius * 0.08);
+  g.circle(cx - radius * 0.32, cy - radius * 0.05, eye).fill(0x1c140c);
+  g.circle(cx + radius * 0.32, cy - radius * 0.05, eye).fill(0x1c140c);
+  paintHat(g, look, cx, cy, radius);
+  paintBeard(g, look, cx, cy, radius);
+}
+
+function paintHat(g: Graphics, look: PieceLook, cx: number, cy: number, radius: number) {
+  if (look.hat === 'crown') {
+    g.moveTo(cx - radius * 1.05, cy - radius * 0.45)
+      .lineTo(cx - radius * 0.55, cy - radius * 1.55)
+      .lineTo(cx, cy - radius * 0.75)
+      .lineTo(cx + radius * 0.55, cy - radius * 1.55)
+      .lineTo(cx + radius * 1.05, cy - radius * 0.45)
       .closePath()
-      .fill(0xf0c36a);
-    g.roundRect(cx - radius * 0.4, cy + radius * 0.35, radius * 0.8, radius * 0.85, radius * 0.3).fill(0x1c140c);
-  } else if (piece.kind === 'general') {
-    g.roundRect(cx - radius * 0.95, cy - radius * 1.35, radius * 1.9, radius * 0.62, 4).fill(0x2a2118);
-    g.roundRect(cx - radius * 0.35, cy + radius * 0.4, radius * 0.7, radius * 0.7, radius * 0.25).fill(0x1c140c);
-  } else {
-    g.roundRect(cx - radius * 0.8, cy - radius * 1.2, radius * 1.6, radius * 0.45, 3).fill(0x3a2e22);
+      .fill(look.trim);
+    return;
   }
+  if (look.hat === 'plume') {
+    g.roundRect(cx - radius * 0.85, cy - radius * 1.25, radius * 1.7, radius * 0.55, 4).fill(0x243044);
+    g.ellipse(cx + radius * 0.15, cy - radius * 1.7, radius * 0.22, radius * 0.7).fill(0xf7f4ea);
+    return;
+  }
+  if (look.hat === 'cap') {
+    g.roundRect(cx - radius * 0.95, cy - radius * 1.2, radius * 1.9, radius * 0.48, 4).fill(look.hair);
+    g.roundRect(cx - radius * 1.15, cy - radius * 0.82, radius * 2.3, radius * 0.22, 3).fill(look.hair);
+    return;
+  }
+  g.roundRect(cx - radius * 0.78, cy - radius * 1.22, radius * 1.56, radius * 0.58, radius * 0.2).fill(0x3a332c);
+  g.roundRect(cx - radius * 0.95, cy - radius * 0.78, radius * 1.9, radius * 0.2, 2).fill(look.trim);
+}
+
+function paintBeard(g: Graphics, look: PieceLook, cx: number, cy: number, radius: number) {
+  const color = look.beard === 'white' ? 0xe7e2d8 : look.hair;
+  if (look.beard === 'none') return;
+  if (look.beard === 'long') {
+    g.roundRect(cx - radius * 0.42, cy + radius * 0.35, radius * 0.84, radius * 1.55, radius * 0.3).fill(color);
+    return;
+  }
+  if (look.beard === 'wide') {
+    g.ellipse(cx, cy + radius * 0.72, radius * 0.85, radius * 0.55).fill(color);
+    return;
+  }
+  g.roundRect(cx - radius * 0.38, cy + radius * 0.32, radius * 0.76, radius * 0.7, radius * 0.25).fill(color);
 }
 
 export class KlotskiScene {
@@ -358,15 +422,15 @@ export class KlotskiScene {
     root.label = piece.id;
     root.position.set(piece.x * cell, piece.y * cell);
     const bg = new Graphics();
-    const fill = pieceFill(piece);
-    paintPiece(bg, piece, cell, fill);
+    const look = lookOf(piece);
+    paintPiece(bg, piece, cell);
     const label = new Text({
       text: piece.name,
       style: {
         fontFamily: FONT,
         fontSize: piece.kind === 'soldier' ? 13 : 15,
         fontWeight: '800',
-        fill: fill === HORIZONTAL_COLORS[0] ? COLOR.ink : COLOR.cream,
+        fill: look.labelDark ? COLOR.ink : COLOR.cream,
       },
     });
     label.anchor.set(0.5, 1);
