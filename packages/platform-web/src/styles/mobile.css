@@ -29,6 +29,8 @@ body,
   color: var(--text);
   font-family: var(--font);
   -webkit-tap-highlight-color: transparent;
+  /* 手机上连续点击棋子或按钮会被浏览器当作双击缩放，这里只保留单指滚动与双指缩放 */
+  touch-action: manipulation;
 }
 
 button,
