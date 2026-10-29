@@ -3,9 +3,12 @@ import { computed, inject, onBeforeUnmount, onMounted, ref, shallowRef, watch } 
 import { ROOM_PLAY_KEY, submitRecord, type RoomPlayContext } from '@game-life/platform-web';
 import { SUDOKU_GAME_ID } from '../meta.js';
 import {
+  clearPeerNotes,
   difficultyLabel,
   generatePuzzle,
   isComplete,
+  isDigitComplete,
+  toggleNote,
   type Difficulty,
   type GeneratedPuzzle,
 } from '../sudoku.js';
@@ -16,7 +19,9 @@ const roomPlay = inject<RoomPlayContext | null>(ROOM_PLAY_KEY, null);
 const phase = ref<'pick' | 'generating' | 'play' | 'done'>('pick');
 const puzzle = ref<GeneratedPuzzle | null>(null);
 const values = ref<number[]>([]);
+const notes = ref<number[][]>([]);
 const selected = ref(0);
+const draftMode = ref(false);
 const startedAt = ref(0);
 const clock = ref(0);
 const submitting = ref(false);
@@ -49,8 +54,10 @@ function sceneState(): SudokuSceneState {
   return {
     phase: phase.value,
     values: values.value,
+    notes: notes.value,
     givens: Array.from({ length: 81 }, (_, index) => givens.value.has(index)),
     selected: selected.value,
+    draftMode: draftMode.value,
     difficultyLabel: puzzle.value ? difficultyLabel(puzzle.value.difficulty) : '',
     clockText: clockText.value,
     submitting: submitting.value,
@@ -65,6 +72,8 @@ async function start(difficulty: Difficulty) {
   const next = generatePuzzle(difficulty);
   puzzle.value = next;
   values.value = next.puzzle.slice();
+  notes.value = Array.from({ length: 81 }, () => []);
+  draftMode.value = false;
   selected.value = next.puzzle.findIndex((value) => value === 0);
   if (selected.value < 0) selected.value = 0;
   startedAt.value = Date.now();
@@ -85,9 +94,28 @@ function selectCell(index: number) {
 
 function writeNumber(value: number) {
   if (phase.value !== 'play' || givens.value.has(selected.value)) return;
+  const index = selected.value;
+  if (draftMode.value) {
+    if (value === 0) {
+      if (values.value[index]) {
+        const next = values.value.slice();
+        next[index] = 0;
+        values.value = next;
+      }
+      notes.value = notes.value.map((cell, cellIndex) => (cellIndex === index ? [] : cell));
+      return;
+    }
+    if (values.value[index]) return;
+    const current = notes.value[index] ?? [];
+    if (!current.includes(value) && isDigitComplete(values.value, value)) return;
+    notes.value = notes.value.map((cell, cellIndex) => (cellIndex === index ? toggleNote(cell, value) : cell));
+    return;
+  }
+  if (value !== 0 && values.value[index] !== value && isDigitComplete(values.value, value)) return;
   const next = values.value.slice();
-  next[selected.value] = value;
+  next[index] = value;
   values.value = next;
+  notes.value = value === 0 ? notes.value.map((cell, cellIndex) => (cellIndex === index ? [] : cell)) : clearPeerNotes(notes.value, index, value);
   if (isComplete(next)) {
     phase.value = 'done';
     clock.value = Date.now();
@@ -95,11 +123,18 @@ function writeNumber(value: number) {
   }
 }
 
+function toggleDraft() {
+  if (phase.value !== 'play') return;
+  draftMode.value = !draftMode.value;
+}
+
 function backToPick() {
   stopTimer();
   phase.value = 'pick';
   puzzle.value = null;
   values.value = [];
+  notes.value = [];
+  draftMode.value = false;
 }
 
 watch(phase, async (next) => {
@@ -140,6 +175,7 @@ onMounted(async () => {
       onPick: start,
       onSelect: selectCell,
       onDigit: writeNumber,
+      onToggleDraft: toggleDraft,
       onReplay: backToPick,
     });
     scene.value = created;

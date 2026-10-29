@@ -111,6 +111,37 @@ export function isComplete(board: number[]): boolean {
   return board.every((_, index) => !hasConflict(board, index));
 }
 
+export function countDigit(board: number[], digit: number): number {
+  if (digit < 1 || digit > 9) return 0;
+  return board.reduce((total, value) => total + (value === digit ? 1 : 0), 0);
+}
+
+export function isDigitComplete(board: number[], digit: number): boolean {
+  return countDigit(board, digit) >= 9;
+}
+
+export function toggleNote(notes: number[], digit: number): number[] {
+  if (digit < 1 || digit > 9) return notes;
+  if (notes.includes(digit)) return notes.filter((value) => value !== digit);
+  return [...notes, digit].sort((left, right) => left - right);
+}
+
+export function clearPeerNotes(notes: number[][], index: number, digit: number): number[][] {
+  const row = Math.floor(index / 9);
+  const col = index % 9;
+  return notes.map((cell, cellIndex) => {
+    if (cellIndex === index) return [];
+    const cellRow = Math.floor(cellIndex / 9);
+    const cellCol = cellIndex % 9;
+    const sameBox =
+      Math.floor(cellRow / 3) === Math.floor(row / 3) && Math.floor(cellCol / 3) === Math.floor(col / 3);
+    if (cellRow === row || cellCol === col || sameBox) {
+      return cell.filter((value) => value !== digit);
+    }
+    return cell;
+  });
+}
+
 export function generatePuzzle(difficulty: Difficulty): GeneratedPuzzle {
   const solution = Array.from({ length: SIZE }, () => 0);
   if (!fill(solution)) throw new Error('无法生成数独');

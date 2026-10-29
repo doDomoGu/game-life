@@ -1,13 +1,15 @@
 import { Application, Container, FillGradient, Graphics, Text } from 'pixi.js';
-import { DIFFICULTIES, hasConflict, type Difficulty } from '../../sudoku.js';
+import { DIFFICULTIES, hasConflict, isDigitComplete, type Difficulty } from '../../sudoku.js';
 
 export type SudokuPhase = 'pick' | 'generating' | 'play' | 'done';
 
 export interface SudokuSceneState {
   phase: SudokuPhase;
   values: number[];
+  notes: number[][];
   givens: boolean[];
   selected: number;
+  draftMode: boolean;
   difficultyLabel: string;
   clockText: string;
   submitting: boolean;
@@ -19,6 +21,7 @@ export interface SudokuSceneHandlers {
   onPick: (difficulty: Difficulty) => void;
   onSelect: (index: number) => void;
   onDigit: (value: number) => void;
+  onToggleDraft: () => void;
   onReplay: () => void;
 }
 
@@ -39,6 +42,8 @@ const COLOR = {
   keyText: 0xf6f1e4,
   keyOn: 0xf0c36a,
   keyOnText: 0x2c1b08,
+  keyOff: 0x3a342c,
+  note: 0x5c5346,
   muted: 0xc4b8a2,
 };
 
@@ -87,8 +92,10 @@ export class SudokuScene {
   private state: SudokuSceneState = {
     phase: 'pick',
     values: [],
+    notes: [],
     givens: [],
     selected: 0,
+    draftMode: false,
     difficultyLabel: '',
     clockText: '',
     submitting: false,
@@ -99,6 +106,7 @@ export class SudokuScene {
     onPick: () => undefined,
     onSelect: () => undefined,
     onDigit: () => undefined,
+    onToggleDraft: () => undefined,
     onReplay: () => undefined,
   };
   private width = 320;
@@ -219,26 +227,45 @@ export class SudokuScene {
       });
       label.anchor.set(0.5);
       label.position.set(cell / 2, cell / 2);
-      cellView.addChild(bg, label);
+      const marks = new Container();
+      marks.label = 'marks';
+      const markSize = Math.max(8, cell * 0.22);
+      const pad = cell * 0.08;
+      const step = (cell - pad * 2) / 3;
+      for (let digit = 1; digit <= 9; digit += 1) {
+        const mark = new Text({
+          text: String(digit),
+          style: { fontFamily: FONT, fontSize: markSize, fontWeight: '700', fill: COLOR.note },
+        });
+        mark.anchor.set(0.5);
+        mark.position.set(pad + ((digit - 1) % 3) * step + step / 2, pad + Math.floor((digit - 1) / 3) * step + step / 2);
+        marks.addChild(mark);
+      }
+      cellView.addChild(bg, label, marks);
       cellView.on('pointertap', () => {
         if (this.state.phase === 'play') this.handlers.onSelect(index);
       });
       board.addChild(cellView);
-      this.paintCell(bg, label, index, cell, selectedValue);
+      this.paintCell(bg, label, marks, index, cell, selectedValue);
     }
 
     if (this.state.phase === 'play') {
       const pad = new Container();
       pad.position.set(0, 32 + size + 16);
       pad.label = 'pad';
-      const key = (size - GAP * 4) / 5;
-      for (let n = 1; n <= 10; n += 1) {
-        const value = n === 10 ? 0 : n;
-        const caption = value === 0 ? '擦除' : String(value);
-        const button = this.button(key, 48, caption, value !== 0 && value === selectedValue);
+      const key = (size - GAP * 5) / 6;
+      for (let n = 1; n <= 11; n += 1) {
+        const kind = n <= 9 ? 'digit' : n === 10 ? 'erase' : 'draft';
+        const value = kind === 'digit' ? n : 0;
+        const caption = kind === 'erase' ? '擦除' : kind === 'draft' ? '草稿' : String(value);
+        const look = this.keyLook(kind, value, selectedValue);
+        const button = this.button(key, 48, caption, look.on, look.disabled);
         const slot = n - 1;
-        button.position.set((slot % 5) * (key + GAP), Math.floor(slot / 5) * 56);
-        button.on('pointertap', () => this.handlers.onDigit(value));
+        button.position.set((slot % 6) * (key + GAP), Math.floor(slot / 6) * 56);
+        button.on('pointertap', () => {
+          if (kind === 'draft') this.handlers.onToggleDraft();
+          else this.handlers.onDigit(value);
+        });
         pad.addChild(button);
       }
       this.root.addChild(pad);
@@ -281,23 +308,35 @@ export class SudokuScene {
     board.children.forEach((child, index) => {
       const bg = child.children[0] as Graphics;
       const label = child.children[1] as Text;
-      this.paintCell(bg, label, index, cell, selectedValue);
+      const marks = child.children[2] as Container;
+      this.paintCell(bg, label, marks, index, cell, selectedValue);
     });
     const pad = this.root.getChildByLabel('pad');
     if (pad) {
-      const keyWidth = (this.width - GAP * 4) / 5;
+      const keyWidth = (this.width - GAP * 5) / 6;
       pad.children.forEach((button, index) => {
-        const value = index === 9 ? 0 : index + 1;
+        const kind = index < 9 ? 'digit' : index === 9 ? 'erase' : 'draft';
+        const value = kind === 'digit' ? index + 1 : 0;
+        const look = this.keyLook(kind, value, selectedValue);
         const bg = button.children[0] as Graphics;
         const label = button.children[1] as Text;
-        const on = value !== 0 && value === selectedValue;
-        this.paintButton(bg, keyWidth, 48, on);
-        label.style.fill = on ? COLOR.keyOnText : COLOR.keyText;
+        this.paintButton(bg, keyWidth, 48, look.on, look.disabled);
+        label.style.fill = look.disabled ? COLOR.muted : look.on ? COLOR.keyOnText : COLOR.keyText;
+        button.cursor = look.disabled ? 'default' : 'pointer';
       });
     }
   }
 
-  private paintCell(bg: Graphics, label: Text, index: number, cell: number, selectedValue: number) {
+  private keyLook(kind: string, value: number, selectedValue: number) {
+    if (kind === 'draft') return { on: this.state.draftMode, disabled: false };
+    if (kind === 'erase') return { on: false, disabled: false };
+    const complete = isDigitComplete(this.state.values, value);
+    const selectedNotes = this.state.notes[this.state.selected] ?? [];
+    const on = this.state.draftMode ? selectedNotes.includes(value) : value === selectedValue;
+    return { on: on && !complete, disabled: complete };
+  }
+
+  private paintCell(bg: Graphics, label: Text, marks: Container, index: number, cell: number, selectedValue: number) {
     const value = this.state.values[index] ?? 0;
     const given = this.state.givens[index] === true;
     const row = Math.floor(index / 9);
@@ -317,25 +356,32 @@ export class SudokuScene {
     bg.clear();
     bg.roundRect(0, 0, cell, cell, 6).fill(fill);
     label.text = value ? String(value) : '';
+    label.visible = value !== 0;
     label.style.fill = conflict ? COLOR.conflictInk : given ? COLOR.ink : COLOR.entry;
+    const cellNotes = value === 0 ? (this.state.notes[index] ?? []) : [];
+    const markSet = new Set(cellNotes);
+    marks.visible = value === 0 && cellNotes.length > 0;
+    marks.children.forEach((child, digitIndex) => {
+      child.visible = markSet.has(digitIndex + 1);
+    });
   }
 
-  private paintButton(bg: Graphics, width: number, height: number, gold: boolean) {
+  private paintButton(bg: Graphics, width: number, height: number, gold: boolean, disabled = false) {
     bg.clear();
-    bg.roundRect(0, 0, width, height, 14).fill(gold ? this.gold : COLOR.key);
+    bg.roundRect(0, 0, width, height, 14).fill(disabled ? COLOR.keyOff : gold ? this.gold : COLOR.key);
   }
 
-  private button(width: number, height: number, caption: string, gold: boolean) {
+  private button(width: number, height: number, caption: string, gold: boolean, disabled = false) {
     const root = new Container();
     const bg = new Graphics();
-    this.paintButton(bg, width, height, gold);
+    this.paintButton(bg, width, height, gold, disabled);
     const label = new Text({
       text: caption,
       style: {
         fontFamily: FONT,
         fontSize: caption.length > 2 ? 16 : 20,
         fontWeight: '800',
-        fill: gold ? COLOR.keyOnText : COLOR.keyText,
+        fill: disabled ? COLOR.muted : gold ? COLOR.keyOnText : COLOR.keyText,
       },
     });
     label.anchor.set(0.5);
