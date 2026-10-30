@@ -7,10 +7,17 @@
     "dev:web": "pnpm --filter @game-life/web dev",
     "dev:server": "pnpm --filter @game-life/server dev",
     "build": "pnpm -r build",
-    "typecheck": "pnpm -r --filter @game-life/shared --filter @game-life/platform-server --filter @game-life/platform-web --filter @game-life/web --filter @game-life/server typecheck"
+    "test": "corepack pnpm --filter @game-life/server test",
+    "test:e2e": "corepack pnpm --filter @game-life/web exec vite build --mode test && corepack pnpm exec playwright test",
+    "test:all": "corepack pnpm test && corepack pnpm test:e2e",
+    "typecheck": "pnpm -r --filter @game-life/shared --filter @game-life/platform-server --filter @game-life/platform-web --filter @game-life/web --filter @game-life/server typecheck",
+    "typecheck:test": "corepack pnpm --filter @game-life/server typecheck:test"
   },
   "engines": {
     "node": ">=20.11.0"
   },
-  "packageManager": "pnpm@9.15.9"
+  "packageManager": "pnpm@9.15.9",
+  "devDependencies": {
+    "@playwright/test": "^1.64.1"
+  }
 }

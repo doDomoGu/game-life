@@ -20,8 +20,3 @@ export async function sendHanabiAction(code: string, message: HanabiActionMessag
   );
   return data;
 }
-
-export async function restartHanabiRoom(code: string) {
-  const { data } = await api.post<HanabiView>(`${base}/${encodeURIComponent(code)}/restart`);
-  return data;
-}

@@ -1,6 +1,7 @@
 import {
   appendRecord,
-  finishRoom,
+  markRoomsDirty,
+  reportGameOver,
   refreshStale,
   sendJson,
   type PresenceSocket,
@@ -172,7 +173,7 @@ async function enterSettlement(session: Session): Promise<void> {
     }),
   );
   try {
-    finishRoom(session.code, session.hostUserId);
+    reportGameOver(session.code, session.hostUserId);
   } catch {
     // 房间可能已经结束
   }
@@ -199,10 +200,12 @@ function tick(code: string): void {
   if (session.phase === 'draw' && (now >= session.phaseEndsAt || allGuessersCorrect(session))) {
     finishDraw(session);
     broadcast(session);
+    markRoomsDirty();
     return;
   }
   if (session.phase === 'reveal' && now >= session.phaseEndsAt) {
     advance(session);
+    markRoomsDirty();
     return;
   }
   if (stale) broadcast(session);
@@ -260,6 +263,52 @@ export function beginSession(
 
 export function getSession(code: string): Session | undefined {
   return sessions.get(code.toUpperCase());
+}
+
+/** 房间被投票中止、返回等待房或销毁时由平台调用 */
+export function abortSession(code: string): void {
+  const roomCode = code.toUpperCase();
+  const timer = timers.get(roomCode);
+  if (timer) clearInterval(timer);
+  timers.delete(roomCode);
+  sessions.delete(roomCode);
+}
+
+export function snapshotRoom(code: string): unknown {
+  const session = getSession(code);
+  if (!session) return null;
+  return {
+    ...session,
+    players: session.players.map(({ sockets, ...player }) => ({
+      ...player,
+      connected: false,
+      lastSeenAt: 0,
+    })),
+    broadcastQueued: false,
+  };
+}
+
+export function restoreRoom(code: string, snapshot: unknown): void {
+  const data = snapshot as Session | null;
+  if (!data || !Array.isArray(data.players) || !Array.isArray(data.words)) return;
+  const roomCode = code.toUpperCase();
+  const previous = timers.get(roomCode);
+  if (previous) clearInterval(previous);
+  const restored: Session = {
+    ...data,
+    code: roomCode,
+    players: data.players.map((player) => ({
+      ...player,
+      connected: false,
+      sockets: new Set(),
+      lastSeenAt: 0,
+    })),
+    broadcastQueued: false,
+  };
+  sessions.set(roomCode, restored);
+  if (restored.phase !== 'settlement') {
+    timers.set(roomCode, setInterval(() => tick(roomCode), 200));
+  }
 }
 
 export function findMember(code: string, userId: string): SessionPlayer | undefined {
@@ -358,6 +407,7 @@ export function applyMessage(code: string, userId: string, message: { type?: str
       points: [point],
     });
     broadcastSoon(session);
+    markRoomsDirty();
     return;
   }
 
@@ -368,6 +418,7 @@ export function applyMessage(code: string, userId: string, message: { type?: str
     if (!stroke || !point) return;
     if (stroke.points.length >= 800) return;
     stroke.points.push(point);
+    if (stroke.points.length % 50 === 0) markRoomsDirty();
     broadcastSoon(session);
     return;
   }
@@ -376,6 +427,7 @@ export function applyMessage(code: string, userId: string, message: { type?: str
     if (!drawingOpen(session, userId)) return;
     session.strokes.pop();
     broadcast(session);
+    markRoomsDirty();
     return;
   }
 
@@ -383,6 +435,7 @@ export function applyMessage(code: string, userId: string, message: { type?: str
     if (!drawingOpen(session, userId)) return;
     session.strokes = [];
     broadcast(session);
+    markRoomsDirty();
     return;
   }
 
@@ -401,10 +454,12 @@ export function applyMessage(code: string, userId: string, message: { type?: str
       player.bubble = { kind: 'correct' };
       if (allGuessersCorrect(session)) finishDraw(session);
       broadcast(session);
+      markRoomsDirty();
       return;
     }
     player.bubble = { kind: 'wrong', text, until: Date.now() + WRONG_BUBBLE_MS };
     broadcast(session);
+    markRoomsDirty();
     return;
   }
 

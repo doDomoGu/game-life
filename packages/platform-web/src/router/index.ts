@@ -3,6 +3,7 @@ import type { WebGamePlugin } from '@game-life/shared';
 import { getWebGameById } from '../games/registry.js';
 import { useAdminStore } from '../stores/admin.js';
 import { useAuthStore } from '../stores/auth.js';
+import { useRoomStore } from '../stores/room.js';
 
 const baseRoutes: RouteRecordRaw[] = [
   {
@@ -88,6 +89,7 @@ export function createAppRouter(games: WebGamePlugin[]) {
   router.beforeEach(async (to) => {
     const auth = useAuthStore();
     const admin = useAdminStore();
+    const roomStore = useRoomStore();
     if (!auth.ready) {
       await auth.bootstrap();
     }
@@ -100,14 +102,24 @@ export function createAppRouter(games: WebGamePlugin[]) {
     if (to.meta.requiresAuth && !auth.isLoggedIn) {
       return { name: 'login', query: { ...to.query, redirect: to.fullPath } };
     }
+    if (to.meta.guest && auth.isLoggedIn) {
+      return { name: 'lobby' };
+    }
     if (to.name === 'game-history') {
       const gameId = to.params.gameId;
       if (typeof gameId === 'string' && !getWebGameById(gameId)) {
         return { name: 'lobby' };
       }
     }
-    if (to.meta.guest && auth.isLoggedIn) {
-      return { name: 'lobby' };
+    // 已在房间中时把所有页面拉回房间，避免人还挂在房间里却去了别处。
+    if (auth.isLoggedIn && !to.meta.requiresAdmin && !to.meta.adminGuest) {
+      const mine = await roomStore.refresh();
+      if (mine) {
+        const targetCode = to.name === 'room' ? String(to.params.code ?? '').toUpperCase() : '';
+        if (to.name !== 'room' || targetCode !== mine.code) {
+          return { name: 'room', params: { code: mine.code }, query: { stay: '1' } };
+        }
+      }
     }
   });
 

@@ -1,35 +1,9 @@
 import type { FastifyInstance } from 'fastify';
 import { getServerGame } from '../games/registry.js';
 import { requireAuth } from '../middleware/auth.js';
-import type { PlatformRoom } from './store.js';
+import type { VoteDecision } from './store.js';
 import * as rooms from './store.js';
-
-export interface RoomView {
-  code: string;
-  status: PlatformRoom['status'];
-  hostUserId: string;
-  gameId: string | null;
-  gameName: string | null;
-  minPlayers: number | null;
-  maxPlayers: number | null;
-  players: PlatformRoom['players'];
-  playerCount: number;
-}
-
-function toView(room: PlatformRoom): RoomView {
-  const game = room.gameId ? getServerGame(room.gameId) : undefined;
-  return {
-    code: room.code,
-    status: room.status,
-    hostUserId: room.hostUserId,
-    gameId: room.gameId,
-    gameName: game?.name ?? null,
-    minPlayers: game?.minPlayers ?? null,
-    maxPlayers: game?.maxPlayers ?? null,
-    players: room.players,
-    playerCount: room.players.length,
-  };
-}
+import { toView } from './view.js';
 
 function handleError(reply: { code: (n: number) => { send: (b: unknown) => unknown } }, err: unknown) {
   const statusCode =
@@ -45,6 +19,7 @@ function handleError(reply: { code: (n: number) => { send: (b: unknown) => unkno
 
 export async function roomRoutes(app: FastifyInstance) {
   app.get('/api/rooms', { preHandler: requireAuth }, async (request) => {
+    rooms.markSeen(request.user!.id);
     const mine = rooms.currentRoomOf(request.user!.id);
     return {
       mine: mine ? toView(mine) : null,
@@ -54,7 +29,9 @@ export async function roomRoutes(app: FastifyInstance) {
 
   app.post('/api/rooms', { preHandler: requireAuth }, async (request, reply) => {
     try {
-      return toView(rooms.createRoom(request.user!.id, request.user!.username));
+      const room = rooms.createRoom(request.user!.id, request.user!.username);
+      rooms.markSeen(request.user!.id);
+      return toView(room);
     } catch (err) {
       return handleError(reply, err);
     }
@@ -65,16 +42,21 @@ export async function roomRoutes(app: FastifyInstance) {
     { preHandler: requireAuth },
     async (request, reply) => {
       try {
-        return toView(rooms.joinRoom(request.params.code, request.user!.id, request.user!.username));
+        const room = rooms.joinRoom(request.params.code, request.user!.id, request.user!.username);
+        return toView(room);
       } catch (err) {
         return handleError(reply, err);
       }
     },
   );
 
-  app.post('/api/rooms/leave', { preHandler: requireAuth }, async (request) => {
-    rooms.leaveRoom(request.user!.id);
-    return { ok: true };
+  app.post('/api/rooms/leave', { preHandler: requireAuth }, async (request, reply) => {
+    try {
+      rooms.leaveRoom(request.user!.id);
+      return { ok: true };
+    } catch (err) {
+      return handleError(reply, err);
+    }
   });
 
   app.get<{ Params: { code: string } }>(
@@ -83,6 +65,10 @@ export async function roomRoutes(app: FastifyInstance) {
     async (request, reply) => {
       const room = rooms.getRoom(request.params.code);
       if (!room) return reply.code(404).send({ message: '房间不存在' });
+      if (!room.players.some((p) => p.userId === request.user!.id)) {
+        return reply.code(403).send({ message: '你不在该房间' });
+      }
+      rooms.markSeen(request.user!.id);
       return toView(room);
     },
   );
@@ -93,6 +79,20 @@ export async function roomRoutes(app: FastifyInstance) {
     async (request, reply) => {
       try {
         return toView(rooms.selectGame(request.params.code, request.user!.id, request.body.gameId));
+      } catch (err) {
+        return handleError(reply, err);
+      }
+    },
+  );
+
+  app.post<{ Params: { code: string }; Body: { ready?: boolean } }>(
+    '/api/rooms/:code/ready',
+    { preHandler: requireAuth },
+    async (request, reply) => {
+      try {
+        return toView(
+          rooms.setReady(request.params.code, request.user!.id, request.body?.ready === true),
+        );
       } catch (err) {
         return handleError(reply, err);
       }
@@ -116,6 +116,12 @@ export async function roomRoutes(app: FastifyInstance) {
     { preHandler: requireAuth },
     async (request, reply) => {
       try {
+        const room = rooms.getRoom(request.params.code);
+        if (!room) return reply.code(404).send({ message: '房间不存在' });
+        const game = room.gameId ? getServerGame(room.gameId) : undefined;
+        if (!game || game.maxPlayers > 1) {
+          return reply.code(403).send({ message: '多人对局由游戏服务端结算' });
+        }
         return toView(rooms.finishRoom(request.params.code, request.user!.id));
       } catch (err) {
         return handleError(reply, err);
@@ -123,12 +129,83 @@ export async function roomRoutes(app: FastifyInstance) {
     },
   );
 
-  app.post<{ Params: { code: string } }>(
-    '/api/rooms/:code/reset',
+  app.post<{ Params: { code: string }; Body: { userId?: string } }>(
+    '/api/rooms/:code/kick',
     { preHandler: requireAuth },
     async (request, reply) => {
       try {
-        return toView(rooms.resetRoom(request.params.code, request.user!.id));
+        return toView(
+          rooms.kickPlayer(request.params.code, request.user!.id, String(request.body?.userId ?? '')),
+        );
+      } catch (err) {
+        return handleError(reply, err);
+      }
+    },
+  );
+
+  app.post<{ Params: { code: string } }>(
+    '/api/rooms/:code/back-to-waiting',
+    { preHandler: requireAuth },
+    async (request, reply) => {
+      try {
+        return toView(rooms.backToWaiting(request.params.code, request.user!.id));
+      } catch (err) {
+        return handleError(reply, err);
+      }
+    },
+  );
+
+  app.post<{ Params: { code: string } }>(
+    '/api/rooms/:code/end-vote',
+    { preHandler: requireAuth },
+    async (request, reply) => {
+      try {
+        return toView(rooms.beginEndVote(request.params.code, request.user!.id));
+      } catch (err) {
+        return handleError(reply, err);
+      }
+    },
+  );
+
+  app.post<{ Params: { code: string } }>(
+    '/api/rooms/:code/rematch-vote',
+    { preHandler: requireAuth },
+    async (request, reply) => {
+      try {
+        const { room, passed } = rooms.beginRematchVote(request.params.code, request.user!.id);
+        if (passed) {
+          return toView(await rooms.applyRematch(request.params.code));
+        }
+        return toView(room);
+      } catch (err) {
+        return handleError(reply, err);
+      }
+    },
+  );
+
+  app.post<{ Params: { code: string }; Body: { decision?: string } }>(
+    '/api/rooms/:code/vote',
+    { preHandler: requireAuth },
+    async (request, reply) => {
+      try {
+        const decision: VoteDecision = request.body?.decision === 'no' ? 'no' : 'yes';
+        const result = rooms.castVote(request.params.code, request.user!.id, decision);
+        if (result.passed && result.kind === 'rematch') {
+          return toView(await rooms.applyRematch(request.params.code));
+        }
+        return toView(result.room);
+      } catch (err) {
+        return handleError(reply, err);
+      }
+    },
+  );
+
+  app.delete<{ Params: { code: string } }>(
+    '/api/rooms/:code/vote',
+    { preHandler: requireAuth },
+    async (request, reply) => {
+      try {
+        return toView(rooms.cancelVote(request.params.code, request.user!.id));
       } catch (err) {
         return handleError(reply, err);
       }

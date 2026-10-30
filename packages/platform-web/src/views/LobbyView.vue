@@ -1,12 +1,19 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue';
-import { useRouter } from 'vue-router';
+import { computed, onMounted, ref } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 import { gameCapacityLabel } from '@game-life/shared';
 import { createRoom, fetchRooms, joinRoom, type RoomView } from '../api/rooms.js';
 import { useAuthStore } from '../stores/auth.js';
+import { useRoomStore } from '../stores/room.js';
 
 const auth = useAuthStore();
+const roomStore = useRoomStore();
+const route = useRoute();
 const router = useRouter();
+
+const notice = computed(() =>
+  typeof route.query.notice === 'string' ? route.query.notice : '',
+);
 
 const mine = ref<RoomView | null>(null);
 const waiting = ref<RoomView[]>([]);
@@ -17,6 +24,7 @@ const loading = ref(false);
 async function load() {
   const data = await fetchRooms();
   mine.value = data.mine;
+  roomStore.mine = data.mine;
   waiting.value = data.waiting.filter((room) => room.code !== data.mine?.code);
 }
 
@@ -69,6 +77,7 @@ function messageOf(e: unknown) {
 }
 
 function logout() {
+  roomStore.clear();
   auth.logout();
   router.push({ name: 'login' });
 }
@@ -105,6 +114,7 @@ function crowdLabel(room: RoomView) {
       <button type="button" class="btn btn--ghost" :disabled="loading" @click="onJoin()">加入</button>
     </div>
     <p v-if="error" class="error">{{ error }}</p>
+    <p v-else-if="notice" class="error">{{ notice }}</p>
 
     <section v-if="mine" class="block">
       <h2>我的房间</h2>

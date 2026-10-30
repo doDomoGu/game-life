@@ -1,12 +1,8 @@
 import {
   appendRecord,
-  bindSocket,
-  finishRoom,
-  getRoom,
-  resetRoom,
+  markRoomsDirty,
+  reportGameOver,
   sendJson,
-  startRoom,
-  unbindSocket,
   type PresenceSocket,
 } from '@game-life/platform-server';
 import type { Color } from '../colors.js';
@@ -90,18 +86,6 @@ function playerOf(session: HanabiSession, userId: string): SessionPlayer | undef
   return session.players.find((p) => p.userId === userId);
 }
 
-export function attachSocket(session: HanabiSession, userId: string, socket: SocketLike): void {
-  const player = playerOf(session, userId);
-  if (!player) return;
-  bindSocket(player, socket);
-}
-
-export function detachSocket(session: HanabiSession, userId: string, socket: SocketLike): void {
-  const player = playerOf(session, userId);
-  if (!player) return;
-  unbindSocket(player, socket);
-}
-
 export function broadcast(session: HanabiSession): void {
   for (const player of session.players) {
     if (player.sockets.size === 0) continue;
@@ -147,7 +131,7 @@ async function saveHistory(session: HanabiSession): Promise<void> {
   );
 
   try {
-    finishRoom(session.code, session.hostUserId);
+    reportGameOver(session.code, session.hostUserId);
   } catch {
     // 房间可能已被房主结束，记录已写入即可
   }
@@ -193,41 +177,47 @@ export async function applyAction(
   }
 
   if (session.game.result) await saveHistory(session);
+  markRoomsDirty();
   return session;
 }
 
-/** 房主结算后再来一局：复用平台房间的 reset + start */
-export async function restartSession(code: string, userId: string): Promise<HanabiSession> {
-  const room = getRoom(code);
-  if (!room) throw Object.assign(new Error('房间不存在'), { statusCode: 404 });
-  if (room.hostUserId !== userId) {
-    throw Object.assign(new Error('只有房主可以再来一局'), { statusCode: 403 });
-  }
-  if (room.status !== 'finished') {
-    throw Object.assign(new Error('对局还没有结束'), { statusCode: 400 });
-  }
+/** 房间被投票中止、返回等待房或销毁时由平台调用 */
+export function abortSession(code: string): void {
+  sessions.delete(code.toUpperCase());
+}
 
-  // 重开一局时组件不会卸载，WS 连接要接到新会话上
-  const previous = getSession(code);
-  const sockets = new Map<string, SocketLike[]>(
-    previous?.players.map((p) => [p.userId, [...p.sockets]]) ?? [],
-  );
+export function snapshotRoom(code: string): unknown {
+  const session = getSession(code);
+  if (!session) return null;
+  return {
+    hostUserId: session.hostUserId,
+    players: session.players.map(({ sockets, ...player }) => ({ ...player, connected: false })),
+    game: session.game,
+    historySaved: session.historySaved,
+  };
+}
 
-  resetRoom(code, userId);
-  try {
-    await startRoom(code, userId);
-  } catch (err) {
-    const message = err instanceof Error ? err.message : '无法开始新一局';
-    throw Object.assign(new Error(message), { statusCode: 400 });
-  }
-
-  const next = getSession(code)!;
-  for (const [playerId, list] of sockets) {
-    for (const socket of list) attachSocket(next, playerId, socket);
-  }
-  // 旧会话不再持有这些连接，避免它的广播把上一局状态推回客户端
-  if (previous) {
-    for (const player of previous.players) player.sockets.clear();
-  }
-  return next;
+export function restoreRoom(code: string, snapshot: unknown): void {
+  const data = snapshot as
+    | {
+        hostUserId: string;
+        players: Array<Omit<SessionPlayer, 'sockets'>>;
+        game: GameState;
+        historySaved?: boolean;
+      }
+    | null;
+  if (!data || !Array.isArray(data.players) || !data.game) return;
+  const roomCode = code.toUpperCase();
+  sessions.set(roomCode, {
+    code: roomCode,
+    hostUserId: data.hostUserId,
+    players: data.players.map((player) => ({
+      ...player,
+      connected: false,
+      sockets: new Set(),
+      lastSeenAt: 0,
+    })),
+    game: data.game,
+    historySaved: data.historySaved === true,
+  });
 }

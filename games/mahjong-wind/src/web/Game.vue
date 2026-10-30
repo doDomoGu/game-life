@@ -107,18 +107,6 @@ function pressPad(key: string) {
   modal.value = { type: 'pad', raw, negative };
 }
 
-async function exitToRoom() {
-  if (!play || busy.value) return;
-  busy.value = true;
-  try {
-    await play.exit();
-  } catch (err) {
-    flash(messageOf(err) ?? '无法回到房间');
-  } finally {
-    busy.value = false;
-  }
-}
-
 function onIntent(intent: WindIntent) {
   const g = game.value;
   if (!g) return;
@@ -176,9 +164,6 @@ function onIntent(intent: WindIntent) {
       confirm('结束对局', '按当前点数结算整场对局，剩余供托归一位。结束后不能再撤销或继续。', '结束对局', {
         type: 'action:end-match',
       });
-      return;
-    case 'exit':
-      void exitToRoom();
       return;
     case 'no-change':
       submitScore(0);

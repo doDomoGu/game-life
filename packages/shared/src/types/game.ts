@@ -19,11 +19,25 @@ export interface RoomStartContext {
   players: Array<{ userId: string; username: string; role: 'host' | 'guest' }>;
 }
 
+export interface RoomLifecycleContext {
+  code: string;
+}
+
+export interface RoomRestoreContext extends RoomLifecycleContext {
+  snapshot: unknown;
+}
+
 export interface ServerGamePlugin extends GameMeta {
   validateSubmit?(rawScore: number, durationMs?: number): string | null;
   registerHttp?: (app: GameHttpApp) => Promise<void>;
   /** 房主开始对局时调用（例如发 Bingo 牌） */
   onStart?(ctx: RoomStartContext): Promise<void> | void;
+  /** 房间投票中止、返回等待房或销毁时调用，游戏只需清理自己的会话 */
+  onRoomAbort?(ctx: RoomLifecycleContext): void;
+  /** 把牌局会话导出为可 JSON 序列化的快照，随房间一起落盘 */
+  snapshotRoom?(ctx: RoomLifecycleContext): unknown;
+  /** 服务重启后按快照恢复牌局会话 */
+  restoreRoom?(ctx: RoomRestoreContext): void;
 }
 
 /** 游戏介绍页（平台模板）文案，由各游戏包配置 */
@@ -57,8 +71,6 @@ export interface WebGamePlugin extends GameMeta {
   playRouteName?: string;
   playRoutePath?: string;
   loadPlay?: () => Promise<unknown>;
-  /** 对局画面自己提供「回到房间」，房间页不再显示「退出游戏」 */
-  exitInGame?: boolean;
   /** 游戏自定义页面（房间大厅等） */
   extraRoutes?: WebGameExtraRoute[];
 }

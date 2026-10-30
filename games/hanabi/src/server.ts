@@ -1,6 +1,6 @@
 import type { ServerGamePlugin } from '@game-life/shared';
 import { hanabiMeta } from './meta.js';
-import { beginSession } from './server/rooms.js';
+import { abortSession, beginSession, restoreRoom, snapshotRoom } from './server/rooms.js';
 import { registerHanabiRoutes } from './server/routes.js';
 
 export const hanabiServerPlugin: ServerGamePlugin = {
@@ -12,5 +12,14 @@ export const hanabiServerPlugin: ServerGamePlugin = {
   registerHttp: registerHanabiRoutes,
   onStart(ctx) {
     beginSession(ctx.code, ctx.hostUserId, ctx.players);
+  },
+  onRoomAbort(ctx) {
+    abortSession(ctx.code);
+  },
+  snapshotRoom(ctx) {
+    return snapshotRoom(ctx.code);
+  },
+  restoreRoom(ctx) {
+    restoreRoom(ctx.code, ctx.snapshot);
   },
 };

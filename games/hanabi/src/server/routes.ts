@@ -84,20 +84,6 @@ export async function registerHanabiRoutes(app: GameHttpApp) {
     },
   );
 
-  fastify.post<{ Params: { code: string } }>(
-    '/api/games/hanabi/rooms/:code/restart',
-    { preHandler: requireAuth },
-    async (request, reply) => {
-      try {
-        const session = await sessions.restartSession(request.params.code, request.user!.id);
-        sessions.broadcast(session);
-        return sessions.publicView(session, request.user!.id);
-      } catch (err) {
-        return handleError(reply, err);
-      }
-    },
-  );
-
   fastify.get<{ Params: { code: string }; Querystring: { token?: string } }>(
     '/api/games/hanabi/rooms/:code/ws',
     { websocket: true },

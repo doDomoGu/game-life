@@ -1,5 +1,5 @@
 import { authenticateToken } from '../services/auth.service.js';
-import { getRoom } from '../rooms/store.js';
+import { getRoom, markSeen } from '../rooms/store.js';
 import {
   bindSocket,
   noteSeen,
@@ -75,13 +75,14 @@ export async function acceptPlayerSocket(options: AcceptPlayerSocketOptions): Pr
     closeSocket(options.socket);
     return;
   }
+  // 连接绑定到当前这一局；重开一局后旧连接不能再操作新会话。
+  const roundId = room.roundId;
 
   bindSocket(joined, options.socket);
+  markSeen(userId);
   options.onChange(code);
 
   options.socket.on('message', (raw) => {
-    const member = options.findMember(code, userId);
-    if (!member) return;
     let message: RealtimeMessage;
     try {
       message = JSON.parse(String(raw)) as RealtimeMessage;
@@ -89,13 +90,25 @@ export async function acceptPlayerSocket(options: AcceptPlayerSocketOptions): Pr
       sendJson(options.socket, 'error', { message: '无效消息' });
       return;
     }
-    const wasConnected = member.connected;
-    noteSeen(member);
+    const wasConnected = joined.connected;
+    noteSeen(joined);
+    markSeen(userId);
     if (!wasConnected) options.onChange(code);
     if (message.type === 'ping') {
       sendJson(options.socket, 'pong', { t: Date.now() });
       return;
     }
+
+    const current = getRoom(code);
+    if (!current || current.roundId !== roundId) {
+      sendJson(options.socket, 'error', { message: '对局已重新开始，请刷新页面' });
+      return;
+    }
+    if (current.status !== 'playing') {
+      sendJson(options.socket, 'error', { message: '本局已结束' });
+      return;
+    }
+
     try {
       void Promise.resolve(options.onMessage(userId, message)).catch((err: unknown) => {
         sendJson(options.socket, 'error', { message: errorMessage(err) });
@@ -106,9 +119,7 @@ export async function acceptPlayerSocket(options: AcceptPlayerSocketOptions): Pr
   });
 
   options.socket.on('close', () => {
-    const member = options.findMember(code, userId);
-    if (!member) return;
-    unbindSocket(member, options.socket);
+    unbindSocket(joined, options.socket);
     options.onChange(code);
   });
 }

@@ -1,6 +1,6 @@
 import type { ServerGamePlugin } from '@game-life/shared';
 import { bingoMeta } from './meta.js';
-import { beginSession } from './server/rooms.js';
+import { abortSession, beginSession, restoreRoom, snapshotRoom } from './server/rooms.js';
 import { registerBingoRoutes } from './server/routes.js';
 
 export const bingoServerPlugin: ServerGamePlugin = {
@@ -12,5 +12,14 @@ export const bingoServerPlugin: ServerGamePlugin = {
   registerHttp: registerBingoRoutes,
   onStart(ctx) {
     beginSession(ctx.code, ctx.players);
+  },
+  onRoomAbort(ctx) {
+    abortSession(ctx.code);
+  },
+  snapshotRoom(ctx) {
+    return snapshotRoom(ctx.code);
+  },
+  restoreRoom(ctx) {
+    restoreRoom(ctx.code, ctx.snapshot);
   },
 };

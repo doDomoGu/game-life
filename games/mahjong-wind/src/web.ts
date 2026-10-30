@@ -13,6 +13,5 @@ export const mahjongWindWebPlugin: WebGamePlugin = {
   intro: mahjongWindIntro,
   introRouteName: mahjongWindRoutes.introRouteName,
   introRoutePath: mahjongWindRoutes.introRoutePath,
-  exitInGame: true,
   loadPlay: () => import('./web/Game.vue'),
 };

@@ -8,6 +8,9 @@ dist-server
 !apps/web/.env.production
 *.log
 .DS_Store
+test-results
+playwright-report
+blob-report
 apps/server/data/*.json
 !apps/server/data/.gitkeep
 deploy.env

@@ -1,6 +1,7 @@
 import {
   appendRecord,
-  finishRoom,
+  markRoomsDirty,
+  reportGameOver,
   sendJson,
   type PresenceSocket,
 } from '@game-life/platform-server';
@@ -84,6 +85,11 @@ export function getSession(code: string): WindSession | undefined {
   return sessions.get(code.toUpperCase());
 }
 
+/** 房间被投票中止、返回等待房或销毁时由平台调用 */
+export function abortSession(code: string): void {
+  sessions.delete(code.toUpperCase());
+}
+
 export function publicView(session: WindSession): MahjongWindView {
   return {
     code: session.code,
@@ -148,7 +154,7 @@ async function saveHistory(session: WindSession): Promise<void> {
   );
 
   try {
-    finishRoom(session.code, session.hostUserId);
+    reportGameOver(session.code, session.hostUserId);
   } catch {
     // 房间可能已被房主结束，记录已写入即可
   }
@@ -198,5 +204,45 @@ export async function applyAction(code: string, userId: string, action: WindActi
   }
 
   if (finished) await saveHistory(session);
+  markRoomsDirty();
   return session;
+}
+
+export function snapshotRoom(code: string): unknown {
+  const session = getSession(code);
+  if (!session) return null;
+  return {
+    hostUserId: session.hostUserId,
+    players: session.players.map(({ sockets, ...player }) => ({ ...player, connected: false })),
+    game: session.game,
+    startedAt: session.startedAt,
+    historySaved: session.historySaved,
+  };
+}
+
+export function restoreRoom(code: string, snapshot: unknown): void {
+  const data = snapshot as
+    | {
+        hostUserId: string;
+        players: Array<Omit<SessionPlayer, 'sockets'>>;
+        game: GameState;
+        startedAt: number;
+        historySaved?: boolean;
+      }
+    | null;
+  if (!data || !Array.isArray(data.players) || !data.game) return;
+  const roomCode = code.toUpperCase();
+  sessions.set(roomCode, {
+    code: roomCode,
+    hostUserId: data.hostUserId,
+    players: data.players.map((player) => ({
+      ...player,
+      connected: false,
+      sockets: new Set(),
+      lastSeenAt: 0,
+    })),
+    game: data.game,
+    startedAt: Number(data.startedAt) || Date.now(),
+    historySaved: data.historySaved === true,
+  });
 }

@@ -9,7 +9,12 @@
     "build": "tsc",
     "bundle": "node build.mjs",
     "start": "node dist/index.js",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "typecheck:test": "tsc --noEmit -p tsconfig.test.json",
+    "test": "node --import tsx --test --test-concurrency=1 test/room-flow.test.ts test/multiplayer.test.ts test/engines.test.ts",
+    "test:room": "node --import tsx --test test/room-flow.test.ts",
+    "test:games": "node --import tsx --test test/multiplayer.test.ts",
+    "test:engines": "node --import tsx --test test/engines.test.ts"
   },
   "dependencies": {
     "@game-life/game-bingo": "workspace:*",

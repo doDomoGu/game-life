@@ -1,4 +1,4 @@
-import { appendRecord, finishRoom } from '@game-life/platform-server';
+import { appendRecord, markRoomsDirty, reportGameOver } from '@game-life/platform-server';
 import { applyDraw, checkWin, createDrawPool, createRandomBoard } from './engine.js';
 import { BINGO_ITEM_COUNT } from '../items.js';
 import { bingoMeta } from '../meta.js';
@@ -109,11 +109,29 @@ export async function drawNext(code: string, hostUserId: string): Promise<BingoS
   if (session.finished && !session.historySaved) {
     await saveMatchHistory(session);
     session.historySaved = true;
-    finishRoom(session.code, hostUserId);
+    reportGameOver(session.code, hostUserId);
   }
+  markRoomsDirty();
   return session;
 }
 
 export function getSession(code: string): BingoSession | undefined {
   return findSession(code);
+}
+
+/** 房间被投票中止、返回等待房或销毁时由平台调用 */
+export function abortSession(code: string): void {
+  sessions.delete(code.toUpperCase());
+}
+
+export function snapshotRoom(code: string): unknown {
+  const session = findSession(code);
+  if (!session) return null;
+  return JSON.parse(JSON.stringify(session)) as unknown;
+}
+
+export function restoreRoom(code: string, snapshot: unknown): void {
+  const session = snapshot as BingoSession | null;
+  if (!session || !Array.isArray(session.players) || !Array.isArray(session.drawPool)) return;
+  sessions.set(code.toUpperCase(), { ...session, code: code.toUpperCase() });
 }

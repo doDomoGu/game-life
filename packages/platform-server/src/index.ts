@@ -12,12 +12,21 @@ import { authRoutes } from './routes/auth.routes.js';
 import { gamesRoutes } from './routes/games.routes.js';
 import { recordsRoutes } from './routes/records.routes.js';
 import { roomRoutes } from './rooms/routes.js';
+import { roomSocketRoutes } from './rooms/ws.js';
+import { flushRooms, initRoomStore, shutdownRoomStore } from './rooms/store.js';
 
 export type { ServerGamePlugin } from './games/registry.js';
 export { requireAuth } from './middleware/auth.js';
 export { authenticateToken } from './services/auth.service.js';
 export { appendRecord } from './storage/record.repository.js';
-export { getRoom, finishRoom, resetRoom, startRoom } from './rooms/store.js';
+export {
+  getRoom,
+  finishRoom,
+  reportGameOver,
+  startRoom,
+  markSeen,
+  markRoomsDirty,
+} from './rooms/store.js';
 export {
   REALTIME_PING_INTERVAL_MS,
   REALTIME_STALE_MS,
@@ -47,6 +56,7 @@ export async function createServer(options: CreateServerOptions) {
     jwtSecret: options.jwtSecret ?? process.env.JWT_SECRET ?? 'dev-secret-change-me',
     port: options.port ?? Number(process.env.PORT ?? 3000),
   });
+  initRoomStore(options.dataDir);
 
   const { port } = getPlatformRuntime();
   const app = Fastify({ logger: true });
@@ -59,6 +69,17 @@ export async function createServer(options: CreateServerOptions) {
   await app.register(gamesRoutes);
   await app.register(recordsRoutes);
   await app.register(roomRoutes);
+  await app.register(roomSocketRoutes);
+
+  app.addHook('onClose', async () => {
+    shutdownRoomStore();
+  });
+  for (const signal of ['SIGTERM', 'SIGINT'] as const) {
+    process.once(signal, () => {
+      flushRooms();
+      process.exit(0);
+    });
+  }
 
   for (const game of getServerGamePlugins()) {
     if (game.registerHttp) {

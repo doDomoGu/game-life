@@ -6,7 +6,6 @@ import { COLOR_LABELS, COLORS, type Color } from '../colors.js';
 import type { HanabiView } from '../view.js';
 import {
   fetchHanabiRoom,
-  restartHanabiRoom,
   sendHanabiAction,
   type HanabiActionMessage,
 } from './api.js';
@@ -38,7 +37,6 @@ const myHand = computed(() => (myId.value ? (game.value?.hands[myId.value] ?? []
 const otherIds = computed(
   () => game.value?.playerOrder.filter((id) => id !== myId.value) ?? [],
 );
-const isHost = computed(() => view.value?.hostUserId === myId.value);
 const currentName = computed(() => nameOf(game.value?.currentPlayerId));
 
 const waitingReconnect = computed(() => {
@@ -152,19 +150,6 @@ function submitHint(): void {
     },
   });
   closeHint();
-}
-
-async function onRestart(): Promise<void> {
-  if (busy.value) return;
-  busy.value = true;
-  error.value = '';
-  try {
-    view.value = await restartHanabiRoom(code.value);
-  } catch (err) {
-    error.value = messageOf(err) ?? '无法开始新一局';
-  } finally {
-    busy.value = false;
-  }
 }
 
 onMounted(async () => {
@@ -323,10 +308,7 @@ watch(
               {{ COLOR_LABELS[color] }} {{ game.fireworks[color] }}
             </span>
           </div>
-          <button v-if="isHost" type="button" class="act" :disabled="busy" @click="onRestart">
-            再来一局
-          </button>
-          <p class="muted">非房主可直接退出；房主点「退出游戏」可回到大厅重新选游戏。</p>
+          <p class="muted">本局已结束，等待房间结算。</p>
         </div>
       </section>
 
