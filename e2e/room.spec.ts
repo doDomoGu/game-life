@@ -227,6 +227,148 @@ test('猜颜色：双人出题，出题者设密码、答题者猜中获胜', as
   await expect(pageB.getByText('正确密码')).toBeVisible();
 });
 
+test('首页积分榜：切换游戏和数独难度', async ({ browser, request }) => {
+  const alice = await register(request, 'lba');
+  const bob = await register(request, 'lbb');
+  for (const [account, seconds] of [
+    [alice, 30],
+    [bob, 50],
+  ] as const) {
+    expect(
+      (
+        await request.post('/api/games/sudoku/records', {
+          headers: { Authorization: `Bearer ${account.token}` },
+          data: {
+            rawScore: seconds,
+            durationMs: seconds * 1000,
+            meta: {
+              kind: 'sudoku',
+              difficulty: 'easy',
+              puzzleId: 1,
+              timeMs: seconds * 1000,
+            },
+          },
+        })
+      ).ok(),
+    ).toBeTruthy();
+  }
+
+  const page = await openAs(browser, alice.token);
+  await page.goto('/');
+  await expect(page.getByRole('heading', { name: '积分榜' })).toBeVisible();
+  await expect(page.locator('.score-name')).toContainText([alice.user.username, bob.user.username]);
+  await page.getByRole('button', { name: /普通/ }).click();
+  await expect(page.getByText('还没有人上榜')).toBeVisible();
+
+  await page.getByRole('combobox', { name: '选择积分榜游戏' }).selectOption('bingo');
+  await expect(page.locator('.scores__sub')).toContainText('Bingo');
+  await page.getByRole('combobox', { name: '选择积分榜游戏' }).selectOption('sudoku');
+  await page.getByRole('button', { name: /简单/ }).click();
+  await expect(page.locator('.score-name').first()).toContainText(alice.user.username);
+  await page.screenshot({ path: 'test-results/home-leaderboard.png' });
+});
+
+test('数独固定题库：选择难度和任意题目开始', async ({ browser, request }) => {
+  const user = await register(request, 'sudoku');
+  const headers = { Authorization: `Bearer ${user.token}` };
+  expect(
+    (
+      await request.post('/api/games/sudoku/records', {
+        headers,
+        data: {
+          rawScore: 30,
+          durationMs: 30_000,
+          meta: { kind: 'sudoku', difficulty: 'easy', puzzleId: 2, timeMs: 30_000 },
+        },
+      })
+    ).ok(),
+  ).toBeTruthy();
+  const created = await request.post('/api/rooms', { headers });
+  expect(created.ok()).toBeTruthy();
+  const room = (await created.json()) as { code: string };
+  expect(
+    (
+      await request.post(`/api/rooms/${room.code}/game`, {
+        headers,
+        data: { gameId: 'sudoku' },
+      })
+    ).ok(),
+  ).toBeTruthy();
+  expect((await request.post(`/api/rooms/${room.code}/start`, { headers })).ok()).toBeTruthy();
+
+  const page = await openAs(browser, user.token);
+  await page.goto(`/room/${room.code}`);
+  await expect(page.locator('.puzzle')).toHaveCount(30);
+  await expect(page.locator('.puzzle').nth(1)).toContainText('0:30');
+  await page.getByRole('button', { name: /普通/ }).click();
+  await expect(page.locator('.puzzle')).toHaveCount(30);
+  await expect(page.locator('.puzzle').first()).toContainText('未完成');
+  await page.screenshot({ path: 'test-results/sudoku-list.png' });
+  await page.locator('.puzzle').first().click();
+  await expect(page.locator('.picker')).toBeHidden();
+  await expect(page.locator('.stage')).toBeVisible();
+  await expect(page.getByRole('button', { name: '结束游戏' })).toBeVisible();
+  await page.screenshot({ path: 'test-results/sudoku-picker.png' });
+});
+
+test('账号中心：修改昵称、上传头像、修改密码和退出账号', async ({ browser, request }) => {
+  const user = await register(request, 'acct');
+  expect(
+    (
+      await request.post('/api/games/sudoku/records', {
+        headers: { Authorization: `Bearer ${user.token}` },
+        data: {
+          rawScore: 30,
+          durationMs: 30_000,
+          meta: { kind: 'sudoku', difficulty: 'easy', puzzleId: 1, timeMs: 30_000 },
+        },
+      })
+    ).ok(),
+  ).toBeTruthy();
+  const png = Buffer.from(
+    'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Y9ZbVQAAAAASUVORK5CYII=',
+    'base64',
+  );
+  const page = await openAs(browser, user.token);
+  await page.goto('/');
+  await page.getByRole('button', { name: '账号中心' }).click();
+  await expect(page.getByRole('dialog', { name: '账号中心' })).toBeVisible();
+  await expect(page.getByText('我的积分')).toBeVisible();
+  await expect(page.getByText(/1 \/ 30/).first()).toBeVisible();
+
+  await page.getByPlaceholder('输入昵称').fill('新昵称');
+  await page.getByRole('button', { name: '保存昵称' }).click();
+  await expect(page.getByText('昵称已更新')).toBeVisible();
+  await expect(page.getByText('你好，新昵称')).toBeVisible();
+
+  await page.locator('input[type="file"]').setInputFiles({
+    name: 'avatar.png',
+    mimeType: 'image/png',
+    buffer: png,
+  });
+  await expect(page.getByText('头像已更新')).toBeVisible();
+  await expect(page.locator('.avatar--lg img')).toBeVisible();
+
+  await page.getByLabel('当前密码').fill('pass1234');
+  await page.getByLabel('新密码', { exact: true }).fill('newpass123');
+  await page.getByLabel('确认新密码').fill('newpass123');
+  await page.getByRole('button', { name: '修改密码' }).click();
+  await expect(page.getByText('密码已修改')).toBeVisible();
+  await page.screenshot({ path: 'test-results/account-drawer.png' });
+
+  const oldLogin = await request.post('/api/auth/login', {
+    data: { username: user.user.username, password: 'pass1234' },
+  });
+  expect(oldLogin.status()).toBe(401);
+  const newLogin = await request.post('/api/auth/login', {
+    data: { username: user.user.username, password: 'newpass123' },
+  });
+  expect(newLogin.ok()).toBeTruthy();
+
+  await page.getByRole('button', { name: '退出账号' }).click();
+  await expect(page).toHaveURL(/\/login/);
+});
+
 test('单人房：自动回房、结算后重开、对局中结束游戏回到等待房', async ({ browser, request }) => {
   const carol = await register(request, 'ec');
   const headers = { Authorization: `Bearer ${carol.token}` };

@@ -14,7 +14,12 @@ export async function requireAuth(request: FastifyRequest, reply: FastifyReply) 
     if (!user) {
       return reply.code(401).send({ message: '用户不存在' });
     }
-    request.user = { id: user.id, username: user.username };
+    request.user = {
+      id: user.id,
+      username: user.username,
+      nickname: user.nickname?.trim() || user.username,
+      avatarUrl: user.avatarUrl || null,
+    };
   } catch (err: unknown) {
     const statusCode =
       err && typeof err === 'object' && 'statusCode' in err && typeof err.statusCode === 'number'
@@ -30,6 +35,11 @@ export async function requireAuth(request: FastifyRequest, reply: FastifyReply) 
 
 declare module 'fastify' {
   interface FastifyRequest {
-    user?: { id: string; username: string };
+    user?: {
+      id: string;
+      username: string;
+      nickname: string;
+      avatarUrl: string | null;
+    };
   }
 }

@@ -29,7 +29,7 @@ export async function roomRoutes(app: FastifyInstance) {
 
   app.post('/api/rooms', { preHandler: requireAuth }, async (request, reply) => {
     try {
-      const room = rooms.createRoom(request.user!.id, request.user!.username);
+      const room = rooms.createRoom(request.user!.id, request.user!.nickname);
       rooms.markSeen(request.user!.id);
       return toView(room);
     } catch (err) {
@@ -42,7 +42,7 @@ export async function roomRoutes(app: FastifyInstance) {
     { preHandler: requireAuth },
     async (request, reply) => {
       try {
-        const room = rooms.joinRoom(request.params.code, request.user!.id, request.user!.username);
+        const room = rooms.joinRoom(request.params.code, request.user!.id, request.user!.nickname);
         return toView(room);
       } catch (err) {
         return handleError(reply, err);

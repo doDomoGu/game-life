@@ -50,3 +50,13 @@ export async function listRecordsByUser(
   const items = list.slice(start, start + opts.pageSize);
   return { items, total };
 }
+
+export async function listRecordsByGame(gameId: string): Promise<GameRecord[]> {
+  const data = await readJsonFile<RecordsFile>(file(), { records: [] });
+  return data.records.filter((record) => record.gameId === gameId);
+}
+
+export async function listAllRecords(): Promise<GameRecord[]> {
+  const data = await readJsonFile<RecordsFile>(file(), { records: [] });
+  return data.records;
+}

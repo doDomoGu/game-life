@@ -29,6 +29,10 @@ import {
   isDigitComplete,
   toggleNote,
 } from '../../../games/sudoku/src/sudoku.js';
+import {
+  listPuzzles,
+  PUZZLES_PER_DIFFICULTY,
+} from '../../../games/sudoku/src/bank.js';
 
 test('数独：生成的题目唯一解，终盘合法', () => {
   const { puzzle, solution } = generatePuzzle('normal');
@@ -41,6 +45,18 @@ test('数独：生成的题目唯一解，终盘合法', () => {
   }
   assert.equal(countSolutions(puzzle, 2), 1, '挖空后应保持唯一解');
   assert.ok(isDigitComplete(solution, 5), '终盘每个数字都出现 9 次');
+});
+
+test('数独：固定题库每档 30 题、题面唯一', () => {
+  for (const difficulty of ['easy', 'normal', 'hard'] as const) {
+    const list = listPuzzles(difficulty);
+    assert.equal(list.length, PUZZLES_PER_DIFFICULTY);
+    assert.equal(new Set(list.map((item) => item.puzzle.join(''))).size, PUZZLES_PER_DIFFICULTY);
+    for (const item of list) {
+      assert.equal(item.puzzle.length, 81);
+      assert.equal(countSolutions(item.puzzle, 2), 1, `${difficulty} #${item.id} 应唯一解`);
+    }
+  }
 });
 
 test('数独：笔记切换与同区清除', () => {

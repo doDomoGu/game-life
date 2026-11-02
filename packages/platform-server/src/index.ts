@@ -9,8 +9,10 @@ import { registerServerGames, getServerGamePlugins } from './games/registry.js';
 import { configurePlatformRuntime, getPlatformRuntime } from './config/runtime.js';
 import { adminRoutes } from './routes/admin.routes.js';
 import { authRoutes } from './routes/auth.routes.js';
+import { accountRoutes } from './routes/account.routes.js';
 import { gamesRoutes } from './routes/games.routes.js';
 import { recordsRoutes } from './routes/records.routes.js';
+import { scoreRoutes } from './routes/score.routes.js';
 import { roomRoutes } from './rooms/routes.js';
 import { roomSocketRoutes } from './rooms/ws.js';
 import { flushRooms, initRoomStore, shutdownRoomStore } from './rooms/store.js';
@@ -65,9 +67,11 @@ export async function createServer(options: CreateServerOptions) {
   // WebSocket 插件必须在路由之前注册，游戏的实时通道才能复用同一条 HTTP 服务
   await app.register(websocket);
   await app.register(authRoutes);
+  await app.register(accountRoutes);
   await app.register(adminRoutes);
   await app.register(gamesRoutes);
   await app.register(recordsRoutes);
+  await app.register(scoreRoutes);
   await app.register(roomRoutes);
   await app.register(roomSocketRoutes);
 

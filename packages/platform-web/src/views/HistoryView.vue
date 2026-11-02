@@ -36,6 +36,11 @@ function difficultyOf(row: GameRecord) {
   return '';
 }
 
+function puzzleOf(row: GameRecord) {
+  const value = Number(row.meta?.puzzleId);
+  return Number.isInteger(value) && value > 0 ? `第 ${value} 题` : '';
+}
+
 function isMatchRecord(row: GameRecord) {
   return typeof row.meta?.won === 'boolean';
 }
@@ -132,7 +137,9 @@ watch(gameId, loadRecords);
           </span>
           <span v-else class="score">{{ row.rawScore }} 次</span>
           <span class="time">{{ formatTime(row.playedAt) }}</span>
-          <p v-if="difficultyOf(row)" class="with">{{ difficultyOf(row) }}</p>
+          <p v-if="difficultyOf(row)" class="with">
+            {{ difficultyOf(row) }}<template v-if="puzzleOf(row)"> · {{ puzzleOf(row) }}</template>
+          </p>
           <p v-if="opponentsOf(row).length" class="with">和 {{ opponentsOf(row).join('、') }}</p>
           <p v-else-if="isMatchRecord(row)" class="with">单人</p>
         </div>

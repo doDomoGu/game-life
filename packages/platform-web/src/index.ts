@@ -10,6 +10,7 @@ import './styles/mobile.css';
 export type { WebGamePlugin } from '@game-life/shared';
 
 export { submitRecord, fetchMyRecords, fetchMyStats } from './api/records.js';
+export { fetchLeaderboard, fetchMyScores } from './api/scores.js';
 export { api } from './api/client.js';
 export { useAuthStore } from './stores/auth.js';
 export { ROOM_PLAY_KEY, type RoomPlayContext } from './room/playKey.js';

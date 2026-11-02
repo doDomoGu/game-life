@@ -1,6 +1,8 @@
 export interface UserPublic {
   id: string;
   username: string;
+  nickname: string;
+  avatarUrl: string | null;
   createdAt: string;
 }
 

@@ -217,13 +217,15 @@ pnpm dev:lan
 ## 自动化测试
 
 ```bash
-pnpm test        # 服务端房间流程 + 多人机器人 + 引擎单测（约 16 秒）
-pnpm test:e2e    # Playwright 双玩家/单人房 UI 冒烟（约 10 秒）
+pnpm test        # 房间流程 + 多人机器人 + 引擎 + 账号 + 积分（约 30 秒）
+pnpm test:e2e    # Playwright 房间/猜颜色/数独/账号/积分 UI 冒烟（约 20 秒）
 pnpm test:all    # 两者都跑
 ```
 
 - 服务端测试在 `apps/server/test/`，用真实服务、随机端口和临时 `DATA_DIR`，不污染本地数据。
 - 覆盖全部游戏的准备/开始/结束/再来一局，以及 Bingo、花火、麻将、你画我猜、猜颜色的多人自然结束和战绩落库。
+- 账号中心覆盖默认昵称、昵称同步到房间、头像上传/清空、密码修改与登录校验。
+- 积分覆盖数独固定题库（每档 30 题）、单题最佳用时、x/30 完成进度、首页分游戏积分榜和账号积分汇总。
 - 测试会把投票时长、画猜轮次等通过环境变量缩短；生产默认值不变。
 - E2E 默认复用系统 Chrome；其他环境可先 `npx playwright install chromium`，再以 `PLAYWRIGHT_CHANNEL=chromium pnpm test:e2e` 运行。
 - `test:e2e` 会用测试模式重新构建前端（base `/`）；部署前仍走 `pnpm build` 或 `deploy.sh` 的生产构建。
