@@ -99,7 +99,7 @@ test('两名玩家从建房、准备、开始、投票中止到再来一局，�
   await expectStatus(pageA, '对局中');
 });
 
-test('玩家列表每行展示 4 人', async ({ browser, request }) => {
+test('玩家区固定 8 个位置，每行 4 个', async ({ browser, request }) => {
   const accounts = [];
   for (const prefix of ['r1', 'r2', 'r3', 'r4']) {
     accounts.push(await register(request, prefix));
@@ -120,17 +120,23 @@ test('玩家列表每行展示 4 人', async ({ browser, request }) => {
   const page = await openAs(browser, host.token);
   await page.goto(`/room/${room.code}`);
   const cards = page.locator('.players li');
-  await expect(cards).toHaveCount(4);
+  await expect(cards).toHaveCount(8);
+  await expect(page.locator('.player-card--empty')).toHaveCount(4);
   const boxes = await cards.evaluateAll((elements) =>
     elements.map((element) => {
       const rect = element.getBoundingClientRect();
       return { x: Math.round(rect.x), y: Math.round(rect.y), width: Math.round(rect.width) };
     }),
   );
-  expect(new Set(boxes.map((box) => box.y)).size).toBe(1);
+  expect(new Set(boxes.slice(0, 4).map((box) => box.y)).size).toBe(1);
+  expect(new Set(boxes.slice(4).map((box) => box.y)).size).toBe(1);
+  expect(boxes[4]!.y).toBeGreaterThan(boxes[0]!.y);
   expect(boxes[0]!.x).toBeLessThan(boxes[1]!.x);
   expect(boxes[1]!.x).toBeLessThan(boxes[2]!.x);
   expect(boxes[2]!.x).toBeLessThan(boxes[3]!.x);
+  expect(boxes[4]!.x).toBeLessThan(boxes[5]!.x);
+  expect(boxes[5]!.x).toBeLessThan(boxes[6]!.x);
+  expect(boxes[6]!.x).toBeLessThan(boxes[7]!.x);
   expect(Math.max(...boxes.map((box) => box.width)) - Math.min(...boxes.map((box) => box.width))).toBeLessThanOrEqual(1);
   await page.screenshot({ path: 'test-results/room-four-players.png' });
 });
@@ -339,7 +345,7 @@ test('账号中心：修改昵称、上传头像、修改密码和退出账号',
   await page.getByPlaceholder('输入昵称').fill('新昵称');
   await page.getByRole('button', { name: '保存昵称' }).click();
   await expect(page.getByText('昵称已更新')).toBeVisible();
-  await expect(page.getByText('你好，新昵称')).toBeVisible();
+  await expect(page.locator('.account__name')).toHaveText('新昵称');
 
   await page.locator('input[type="file"]').setInputFiles({
     name: 'avatar.png',
@@ -367,6 +373,16 @@ test('账号中心：修改昵称、上传头像、修改密码和退出账号',
 
   await page.getByRole('button', { name: '退出账号' }).click();
   await expect(page).toHaveURL(/\/login/);
+});
+
+test('notice 提示读取后会从 URL 移除并自动消失', async ({ browser, request }) => {
+  const user = await register(request, 'notice');
+  const page = await openAs(browser, user.token);
+  await page.goto('/?notice=房间不存在');
+  await expect(page.getByText('房间不存在')).toBeVisible();
+  await expect(page).toHaveURL(`${baseURL}/`);
+  await page.waitForTimeout(4_500);
+  await expect(page.getByText('房间不存在')).toHaveCount(0);
 });
 
 test('单人房：自动回房、结算后重开、对局中结束游戏回到等待房', async ({ browser, request }) => {

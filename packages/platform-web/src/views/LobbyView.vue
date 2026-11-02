@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue';
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import type { LeaderboardEntry, LeaderboardResponse, SudokuDifficulty } from '@game-life/shared';
 import { gameCapacityLabel } from '@game-life/shared';
@@ -15,9 +15,26 @@ const roomStore = useRoomStore();
 const route = useRoute();
 const router = useRouter();
 
-const notice = computed(() =>
-  typeof route.query.notice === 'string' ? route.query.notice : '',
-);
+const notice = ref('');
+const NOTICE_MS = 4000;
+let noticeTimer: ReturnType<typeof setTimeout> | null = null;
+
+function consumeNotice(value: unknown) {
+  if (typeof value !== 'string' || !value) return;
+  notice.value = value;
+  if (noticeTimer) clearTimeout(noticeTimer);
+  noticeTimer = setTimeout(() => {
+    notice.value = '';
+    noticeTimer = null;
+  }, NOTICE_MS);
+  if (route.query.notice !== undefined) {
+    const rest = { ...route.query };
+    delete rest.notice;
+    void router.replace({ name: 'lobby', query: rest });
+  }
+}
+
+watch(() => route.query.notice, consumeNotice, { immediate: true });
 
 const mine = ref<RoomView | null>(null);
 const waiting = ref<RoomView[]>([]);
@@ -98,6 +115,10 @@ onMounted(() => {
   void loadLeaderboard();
 });
 
+onUnmounted(() => {
+  if (noticeTimer) clearTimeout(noticeTimer);
+});
+
 function openRoom(code: string) {
   router.push({ name: 'room', params: { code } });
 }
@@ -161,10 +182,7 @@ function crowdLabel(room: RoomView) {
 <template>
   <div class="page lobby">
     <header class="lobby__top">
-      <div>
-        <p class="hello">你好，{{ auth.displayName }}</p>
-        <h1>房间</h1>
-      </div>
+      <h1>房间</h1>
       <button type="button" class="account" aria-label="账号中心" @click="accountOpen = true">
         <span class="account__avatar">
           <img v-if="auth.avatarUrl" :src="auth.avatarUrl" alt="" />
@@ -262,17 +280,12 @@ function crowdLabel(room: RoomView) {
 .lobby__top {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
+  align-items: center;
   gap: 12px;
   margin-bottom: 16px;
 }
-.hello {
-  margin: 0;
-  font-size: 14px;
-  color: var(--muted);
-}
 h1 {
-  margin: 4px 0 0;
+  margin: 0;
   font-size: 26px;
 }
 .account {

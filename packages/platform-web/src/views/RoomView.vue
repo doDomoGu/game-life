@@ -97,6 +97,11 @@ const myReady = computed(
 const guestsNotReady = computed(
   () => room.value?.players.filter((p) => p.role === 'guest' && !p.ready) ?? [],
 );
+const MAX_ROOM_SLOTS = 8;
+const rosterSlots = computed<Array<RoomView['players'][number] | null>>(() => {
+  const players = room.value?.players ?? [];
+  return Array.from({ length: MAX_ROOM_SLOTS }, (_, index) => players[index] ?? null);
+});
 const canStart = computed(() => {
   const current = room.value;
   const game = selectedGame.value;
@@ -370,33 +375,45 @@ onUnmounted(() => {
           <h2>玩家（{{ room.playerCount }}）</h2>
           <ul class="players room-roster">
             <li
-              v-for="player in room.players"
-              :key="player.userId"
+              v-for="(player, index) in rosterSlots"
+              :key="player?.userId ?? `empty-${index}`"
               class="player-card"
-              :class="{ 'player-card--self': player.userId === auth.userId }"
+              :class="{
+                'player-card--self': player?.userId === auth.userId,
+                'player-card--empty': !player,
+              }"
             >
-              <span class="player-name" :title="player.username">
-                <span class="dot" :class="{ online: player.connected }" aria-hidden="true"></span>
-                <span class="name">{{ player.username }}</span>
-              </span>
-              <span
-                class="role"
-                :class="{
-                  'role--ready': player.role === 'guest' && player.ready,
-                  'role--idle': player.role === 'guest' && !player.ready,
-                }"
-              >
-                {{ player.role === 'host' ? '房主' : player.ready ? '已准备' : '未准备' }}
-              </span>
-              <button
-                v-if="isHost && player.role === 'guest' && room.status === 'waiting'"
-                type="button"
-                class="kick"
-                :aria-label="`移出 ${player.username}`"
-                @click="onKick(player)"
-              >
-                移出
-              </button>
+              <template v-if="player">
+                <span class="player-name" :title="player.username">
+                  <span class="dot" :class="{ online: player.connected }" aria-hidden="true"></span>
+                  <span class="name">{{ player.username }}</span>
+                </span>
+                <span
+                  class="role"
+                  :class="{
+                    'role--ready': player.role === 'guest' && player.ready,
+                    'role--idle': player.role === 'guest' && !player.ready,
+                  }"
+                >
+                  {{ player.role === 'host' ? '房主' : player.ready ? '已准备' : '未准备' }}
+                </span>
+                <button
+                  v-if="isHost && player.role === 'guest' && room.status === 'waiting'"
+                  type="button"
+                  class="kick"
+                  :aria-label="`移出 ${player.username}`"
+                  @click="onKick(player)"
+                >
+                  移出
+                </button>
+              </template>
+              <template v-else>
+                <span class="player-name player-name--empty">
+                  <span class="dot" aria-hidden="true"></span>
+                  <span class="name">空位</span>
+                </span>
+                <span class="role role--idle">等待加入</span>
+              </template>
             </li>
           </ul>
         </section>
@@ -538,6 +555,17 @@ h2 {
 .player-card--self {
   outline: 1px solid var(--accent);
   outline-offset: -1px;
+}
+.player-card--empty {
+  border: 1px dashed rgba(148, 163, 184, 0.32);
+  background: transparent;
+}
+.player-card--empty .dot {
+  background: transparent;
+  border: 1px solid #64748b;
+}
+.player-name--empty .name {
+  color: var(--muted);
 }
 .player-name {
   display: flex;
