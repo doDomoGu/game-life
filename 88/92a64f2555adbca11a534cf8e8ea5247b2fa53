@@ -1,0 +1,126 @@
+games/sudoku/src/web/Play.vue
+  s_715a387433563d::t_8765a5adb24ac8 3-7,11,18,22-23,28-29,32-36,47-74,77,84-99,102-104,111-113,116,119-122,146-148,155-159,167-173,175-181,187,190-203,210-215,218-223,233-269,273-274,285,289,301,319,324,335-378,380-400,413,415-456,458-504,512,519-562,565-568
+  s_715a387433563d::t_43e946a45de763 2
+packages/shared/src/types/score.ts
+  s_715a387433563d::t_1ffc398ee2b3af 1-19,21-27,29-50
+  s_715a387433563d::t_eb8a97cf056c62 20,28
+packages/shared/src/index.ts
+  s_715a387433563d::t_0f374a266fe216 5
+e2e/room.spec.ts
+  s_715a387433563d::t_7da4ab86af5443 316-327,336-337
+  s_715a387433563d::t_002ea0bc01db5f 306
+  s_715a387433563d::t_423ae962574256 266
+  s_715a387433563d::t_7f987f3191af87 314-315,328-335,338-356,358-371
+  s_715a387433563d::t_34ee24693f3341 357
+  s_715a387433563d::t_04b1d7205e4b7e 230-265,267-305,307-313
+games/sudoku/src/puzzles.json
+  s_715a387433563d::t_823a28d2eb63a3 1
+packages/platform-web/src/views/HistoryView.vue
+  s_715a387433563d::t_85cf2ccbd45350 140-142
+  s_715a387433563d::t_4681b95206f309 39-43
+packages/platform-server/src/rooms/routes.ts
+  s_715a387433563d::t_8452b45cbbac51 32
+  s_715a387433563d::t_93d43fdb2d7031 45
+packages/platform-web/src/api/scores.ts
+  s_715a387433563d::t_178ec0943bdd36 1-22
+apps/server/test/account.test.ts
+  s_715a387433563d::t_c32f02bb76060a 1-131
+packages/platform-server/src/middleware/auth.ts
+  s_715a387433563d::t_418b1e8fcdeb73 17-22
+  s_715a387433563d::t_18bdddcdb8b58a 38-43
+packages/platform-server/src/services/score.service.ts
+  s_715a387433563d::t_9eaea35c05cd42 38
+  s_715a387433563d::t_25d78c58a6a421 21-22
+  s_715a387433563d::t_32cc75be2c16aa 107-108
+  s_715a387433563d::t_9ca844dd9ff60a 93
+  s_715a387433563d::t_67bd798434d065 184-188,298
+  s_715a387433563d::t_73483fa670dc49 314,334,342,347,351
+  s_715a387433563d::t_b2d36b40e8027c 166-167,183
+  s_715a387433563d::t_5a19ea51e83407 1-20,23-37,39-92,94-106,109-165,168-182,189-297,299-313,315-333,335-341,343-346,348-350,352-355
+packages/platform-web/src/stores/auth.ts
+  s_715a387433563d::t_2d6854be439279 3,11-12,17,19,21-31,38-39,51,59-64,78-79,83,86,89
+packages/platform-web/src/views/LobbyView.vue
+  s_715a387433563d::t_37df8d95210b36 4
+  s_715a387433563d::t_05da079772b589 341-433
+  s_715a387433563d::t_343a6b83a62aac 165,169-174
+  s_715a387433563d::t_aac82667df5942 257
+  s_715a387433563d::t_c022cf7c1c12fd 252-254
+  s_715a387433563d::t_067b103a8698bb 278-281,283-316
+  s_715a387433563d::t_6972d7cd284ba3 208-251,255-256
+  s_715a387433563d::t_1ca68aea26071e 11
+  s_715a387433563d::t_2c984ea33ebbd0 27-28
+  s_715a387433563d::t_cf9b038e653662 55-68,70-93,98
+  s_715a387433563d::t_321d7b2a9fe300 105-109
+  s_715a387433563d::t_1ddae836537355 2,7-8
+  s_715a387433563d::t_cbace8a8682a18 168
+  s_715a387433563d::t_08bd61a16d9430 33-37
+  s_715a387433563d::t_27476cf4b19005 30-32,38-46
+  s_715a387433563d::t_50e61621a084c3 69
+packages/platform-server/src/storage/user.repository.ts
+  s_715a387433563d::t_0af2852005b670 11-22,25-26,31-32,37,45-46,54-65
+packages/platform-server/src/services/auth.service.ts
+  s_715a387433563d::t_8d21259445d278 9-12,14-31,40,43,47,53,59,61,64,68-111,117,123,126-132
+packages/shared/src/types/auth.ts
+  s_715a387433563d::t_e395ebaa1340a1 11-24,30-32
+packages/platform-server/src/routes/account.routes.ts
+  s_715a387433563d::t_cd2a11e60279bf 1-66
+README.md
+  s_715a387433563d::t_196cac88bba06f 220-221
+  s_715a387433563d::t_d91db322275f1d 227
+  s_715a387433563d::t_f9ca0bdab76752 228
+packages/platform-server/src/storage/record.repository.ts
+  s_715a387433563d::t_64d12ad7e9a738 53-62
+games/sudoku/src/bank.ts
+  s_715a387433563d::t_e7128e6b3dcc7c 1-30
+packages/shared/src/types/user.ts
+  s_715a387433563d::t_03d0a3c588631b 4-5
+packages/platform-web/src/index.ts
+  s_715a387433563d::t_cabde5122138ee 13
+apps/server/test/engines.test.ts
+  s_715a387433563d::t_f4c7db49a3bada 32-35
+  s_715a387433563d::t_da6b3ffd42b2c3 50-61
+games/sudoku/src/intro.config.ts
+  s_715a387433563d::t_cdf550ef03467f 6,11-12,14,16
+apps/server/package.json
+  s_715a387433563d::t_d1ed78034ab97d 14,18-19
+  s_715a387433563d::t_f1308abd1a2bec 17
+apps/server/test/scores.test.ts
+  s_715a387433563d::t_d9d129153f7ab6 131
+  s_715a387433563d::t_46876f085543b3 134,136,139,141,144-151,154,157,160,163
+  s_715a387433563d::t_3937a545360828 159,161-162
+  s_715a387433563d::t_e89fcdf19427c5 1-130,132-133,135,137-138,140,142-143,152-153,155-156,158,164
+packages/platform-server/src/routes/score.routes.ts
+  s_715a387433563d::t_422a0268233fea 1-51
+packages/platform-web/src/api/account.ts
+  s_715a387433563d::t_1e334efd2c2b5e 1-27
+packages/platform-server/src/index.ts
+  s_715a387433563d::t_c7f5f21bdfe444 15
+  s_715a387433563d::t_1647fd44d78112 70
+  s_715a387433563d::t_4fa342d8bee946 74
+  s_715a387433563d::t_d040b2ece7c16c 12
+packages/platform-web/src/components/AccountDrawer.vue
+  s_715a387433563d::t_164594f974b600 81
+  s_715a387433563d::t_7df0141f2af3ab 82-85
+  s_715a387433563d::t_b058af812f4b89 57,61-80,86-87
+  s_715a387433563d::t_94c044c782e9ca 1-3,5-7,9-24,33-56,58-60,88-302,331-536,566-596
+  s_715a387433563d::t_3781ae6be6e916 303-330
+  s_715a387433563d::t_825b59419069f6 537-565
+  s_715a387433563d::t_5501fce8abc02c 4,8
+  s_715a387433563d::t_ced866eea78f66 25-32
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.51-trip",
+  "base_commit_sha": "8892a64f2555adbca11a534cf8e8ea5247b2fa53",
+  "prompts": {},
+  "sessions": {
+    "s_715a387433563d": {
+      "agent_id": {
+        "tool": "chengxiaobang",
+        "id": "s_cadztkaosaj7",
+        "model": "auto(free)"
+      },
+      "human_author": "gulingjun <gulingjun@trip.com>"
+    }
+  }
+}
