@@ -1,0 +1,25 @@
+packages/platform-web/src/views/RoomView.vue
+  s_715a387433563d::t_8221c3405cc651 353-359,361,363-370,372-380
+  s_715a387433563d::t_5f1b91c3bd2a36 533-534
+  s_715a387433563d::t_d34ece4155123d 505-506,511-514,517-521,524,526-528,530-532,538-540,549,551-555,558-559,563-566
+  s_715a387433563d::t_939b612288dd38 535
+e2e/room.spec.ts
+  s_715a387433563d::t_73cad69d558a2d 103-108
+  s_715a387433563d::t_f1c6057e8366e1 102,109-137
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.51-trip",
+  "base_commit_sha": "44c5371349ba1fd02e8524f9237b3e18b593fd6f",
+  "prompts": {},
+  "sessions": {
+    "s_715a387433563d": {
+      "agent_id": {
+        "tool": "chengxiaobang",
+        "id": "s_cadztkaosaj7",
+        "model": "auto(free)"
+      },
+      "human_author": "gulingjun <gulingjun@trip.com>"
+    }
+  }
+}
