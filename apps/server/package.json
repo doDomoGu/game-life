@@ -18,6 +18,7 @@
   },
   "dependencies": {
     "@game-life/game-bingo": "workspace:*",
+    "@game-life/game-color-guess": "workspace:*",
     "@game-life/game-draw-guess": "workspace:*",
     "@game-life/game-hanabi": "workspace:*",
     "@game-life/game-poker-memory": "workspace:*",

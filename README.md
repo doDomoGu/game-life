@@ -223,7 +223,7 @@ pnpm test:all    # 两者都跑
 ```
 
 - 服务端测试在 `apps/server/test/`，用真实服务、随机端口和临时 `DATA_DIR`，不污染本地数据。
-- 覆盖全部游戏的准备/开始/结束/再来一局，以及 Bingo、花火、麻将、你画我猜的多人自然结束和战绩落库。
+- 覆盖全部游戏的准备/开始/结束/再来一局，以及 Bingo、花火、麻将、你画我猜、猜颜色的多人自然结束和战绩落库。
 - 测试会把投票时长、画猜轮次等通过环境变量缩短；生产默认值不变。
 - E2E 默认复用系统 Chrome；其他环境可先 `npx playwright install chromium`，再以 `PLAYWRIGHT_CHANNEL=chromium pnpm test:e2e` 运行。
 - `test:e2e` 会用测试模式重新构建前端（base `/`）；部署前仍走 `pnpm build` 或 `deploy.sh` 的生产构建。

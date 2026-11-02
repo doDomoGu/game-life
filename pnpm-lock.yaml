@@ -17,6 +17,9 @@ importers:
       '@game-life/game-bingo':
         specifier: workspace:*
         version: link:../../games/bingo
+      '@game-life/game-color-guess':
+        specifier: workspace:*
+        version: link:../../games/color-guess
       '@game-life/game-draw-guess':
         specifier: workspace:*
         version: link:../../games/draw-guess
@@ -60,6 +63,9 @@ importers:
       '@game-life/game-bingo':
         specifier: workspace:*
         version: link:../../games/bingo
+      '@game-life/game-color-guess':
+        specifier: workspace:*
+        version: link:../../games/color-guess
       '@game-life/game-draw-guess':
         specifier: workspace:*
         version: link:../../games/draw-guess
@@ -136,6 +142,21 @@ importers:
       vue-router:
         specifier: ^4.5.0
         version: 4.6.4(vue@3.5.43(typescript@5.9.3))
+
+  games/color-guess:
+    dependencies:
+      '@game-life/platform-server':
+        specifier: workspace:*
+        version: link:../../packages/platform-server
+      '@game-life/shared':
+        specifier: workspace:*
+        version: link:../../packages/shared
+      fastify:
+        specifier: ^5.6.0
+        version: 5.12.5
+      vue:
+        specifier: ^3.5.0
+        version: 3.5.43(typescript@5.9.3)
 
   games/draw-guess:
     dependencies:

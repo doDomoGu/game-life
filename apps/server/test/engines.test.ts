@@ -1,7 +1,12 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { applyDraw, checkWin, createRandomBoard } from '../../../games/bingo/src/server/engine.js';
-import { scoreDrawer, scoreGuess } from '../../../games/draw-guess/src/scoring.js';
+import {
+  randomSecret,
+  scoreGuess,
+  validateCode,
+} from '../../../games/color-guess/src/engine.js';
+import { scoreDrawer, scoreGuess as scoreDrawGuess } from '../../../games/draw-guess/src/scoring.js';
 import {
   startGame as startHanabi,
   playCard,
@@ -72,15 +77,32 @@ test('Bingo：随机板是 0..24 的排列，连线判定正确', () => {
 });
 
 test('你画我猜：按剩余秒数分档计分', () => {
-  assert.equal(scoreGuess(60), 3);
-  assert.equal(scoreGuess(41), 3);
-  assert.equal(scoreGuess(40), 2);
-  assert.equal(scoreGuess(21), 2);
-  assert.equal(scoreGuess(20), 1);
-  assert.equal(scoreGuess(1), 1);
-  assert.equal(scoreGuess(0), 0);
+  assert.equal(scoreDrawGuess(60), 3);
+  assert.equal(scoreDrawGuess(41), 3);
+  assert.equal(scoreDrawGuess(40), 2);
+  assert.equal(scoreDrawGuess(21), 2);
+  assert.equal(scoreDrawGuess(20), 1);
+  assert.equal(scoreDrawGuess(1), 1);
+  assert.equal(scoreDrawGuess(0), 0);
   assert.equal(scoreDrawer([3, 2, 1], false), 6, '画手得猜对者分数之和');
   assert.equal(scoreDrawer([3, 2, 1], true), 0, '全员猜对画手不得分');
+});
+
+test('猜颜色：全对/半对、重复计数与合法性', () => {
+  assert.deepEqual(scoreGuess([1, 2, 3, 4], [1, 2, 3, 4]), { exact: 4, partial: 0 });
+  assert.deepEqual(scoreGuess([1, 2, 3, 4], [4, 3, 2, 1]), { exact: 0, partial: 4 });
+  assert.deepEqual(scoreGuess([1, 1, 2, 3], [1, 2, 1, 4]), { exact: 1, partial: 2 });
+  assert.deepEqual(scoreGuess([1, 1, 1, 1], [1, 2, 3, 4]), { exact: 1, partial: 0 });
+  assert.equal(validateCode([0, 1, 2, 3], 8, false), null);
+  assert.notEqual(validateCode([0, 0, 1, 2], 8, false), null);
+  assert.equal(validateCode([0, 0, 1, 2], 8, true), null);
+  assert.notEqual(validateCode([0, 1, 2, 8], 8, true), null);
+  assert.notEqual(validateCode([0, 1, 2], 8, true), null);
+
+  const secret = randomSecret(8, false);
+  assert.equal(secret.length, 4);
+  assert.equal(new Set(secret).size, 4);
+  assert.ok(secret.every((value) => value >= 0 && value < 8));
 });
 
 test('华容道：最简关卡的最短解可走通', () => {

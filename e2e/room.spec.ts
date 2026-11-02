@@ -135,6 +135,98 @@ test('玩家列表每行展示 4 人', async ({ browser, request }) => {
   await page.screenshot({ path: 'test-results/room-four-players.png' });
 });
 
+test('猜颜色：单人配置、提交猜测和反馈展示', async ({ browser, request }) => {
+  const user = await register(request, 'cg');
+  const headers = { Authorization: `Bearer ${user.token}` };
+  const created = await request.post('/api/rooms', { headers });
+  expect(created.ok()).toBeTruthy();
+  const room = (await created.json()) as { code: string };
+  expect(
+    (
+      await request.post(`/api/rooms/${room.code}/game`, {
+        headers,
+        data: { gameId: 'color-guess' },
+      })
+    ).ok(),
+  ).toBeTruthy();
+  expect((await request.post(`/api/rooms/${room.code}/start`, { headers })).ok()).toBeTruthy();
+
+  const page = await openAs(browser, user.token);
+  await page.goto(`/room/${room.code}`);
+  await expect(page.getByText('配置中')).toBeVisible();
+  await page.getByRole('button', { name: /10 种/ }).click();
+  await expect(page.getByText(/10 色/)).toBeVisible();
+  await page.getByRole('button', { name: /^允许/ }).click();
+  await expect(page.getByText(/允许重复/)).toBeVisible();
+  await page.getByRole('button', { name: '开始对局' }).click();
+
+  await expect(page.getByText('进行中')).toBeVisible();
+  for (const name of ['红', '橙', '黄', '绿']) {
+    await page.getByRole('button', { name, exact: true }).click();
+  }
+  await page.getByRole('button', { name: '提交猜测' }).click();
+  await expect(page.getByText(/全对/)).toBeVisible();
+  await expect(page.getByText('1 / 10')).toBeVisible();
+  await expect(page.getByText('正确密码')).toHaveCount(0);
+  await page.screenshot({ path: 'test-results/color-guess-solo.png' });
+});
+
+test('猜颜色：双人出题，出题者设密码、答题者猜中获胜', async ({ browser, request }) => {
+  const alice = await register(request, 'csa');
+  const bob = await register(request, 'csb');
+  const headersA = { Authorization: `Bearer ${alice.token}` };
+  const headersB = { Authorization: `Bearer ${bob.token}` };
+  const created = await request.post('/api/rooms', { headers: headersA });
+  expect(created.ok()).toBeTruthy();
+  const room = (await created.json()) as { code: string };
+  expect(
+    (await request.post(`/api/rooms/${room.code}/join`, { headers: headersB })).ok(),
+  ).toBeTruthy();
+  expect(
+    (
+      await request.post(`/api/rooms/${room.code}/game`, {
+        headers: headersA,
+        data: { gameId: 'color-guess' },
+      })
+    ).ok(),
+  ).toBeTruthy();
+  expect(
+    (
+      await request.post(`/api/rooms/${room.code}/ready`, {
+        headers: headersB,
+        data: { ready: true },
+      })
+    ).ok(),
+  ).toBeTruthy();
+  expect((await request.post(`/api/rooms/${room.code}/start`, { headers: headersA })).ok()).toBeTruthy();
+
+  const pageA = await openAs(browser, alice.token);
+  const pageB = await openAs(browser, bob.token);
+  await pageA.goto(`/room/${room.code}`);
+  await pageB.goto(`/room/${room.code}`);
+
+  await pageA.getByRole('button', { name: /双人出题/ }).click();
+  await pageA.getByRole('button', { name: '我出题' }).click();
+  await pageA.getByRole('button', { name: '开始对局' }).click();
+  await expect(pageA.getByText('设置 4 位颜色密码')).toBeVisible({ timeout: 10_000 });
+  await expect(pageB.getByText('对方正在设置密码…')).toBeVisible({ timeout: 10_000 });
+
+  for (const name of ['红', '橙', '黄', '绿']) {
+    await pageA.getByRole('button', { name, exact: true }).click();
+  }
+  await pageA.getByRole('button', { name: '确认密码' }).click();
+  await expect(pageA.getByText('你设置的密码')).toBeVisible({ timeout: 10_000 });
+  await expect(pageB.getByText('第 1 次猜测')).toBeVisible({ timeout: 10_000 });
+
+  for (const name of ['红', '橙', '黄', '绿']) {
+    await pageB.getByRole('button', { name, exact: true }).click();
+  }
+  await pageB.getByRole('button', { name: '提交猜测' }).click();
+  await expect(pageB.getByText('你赢了')).toBeVisible({ timeout: 10_000 });
+  await expect(pageA.getByText(`${bob.user.username} 获胜`)).toBeVisible({ timeout: 10_000 });
+  await expect(pageB.getByText('正确密码')).toBeVisible();
+});
+
 test('单人房：自动回房、结算后重开、对局中确认放弃', async ({ browser, request }) => {
   const carol = await register(request, 'ec');
   const headers = { Authorization: `Bearer ${carol.token}` };
