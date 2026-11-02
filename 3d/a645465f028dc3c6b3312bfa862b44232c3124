@@ -1,0 +1,36 @@
+packages/platform-web/src/views/RoomView.vue
+  s_715a387433563d::t_bdb707da8b2336 64-66
+  s_715a387433563d::t_b8005992185707 326-328,330-336
+  s_715a387433563d::t_1632a87da33a2f 8
+  s_715a387433563d::t_860a1d54e9e4c8 251-255
+  s_715a387433563d::t_a1e6e88b5dc73e 329
+packages/platform-server/src/rooms/store.ts
+  s_715a387433563d::t_fe1839c5bd28cc 566-582
+e2e/room.spec.ts
+  s_715a387433563d::t_1e4740a28d58e1 230,258-261,266-294
+packages/platform-web/src/api/rooms.ts
+  s_715a387433563d::t_e96bf1e01cdeca 92-96
+apps/server/test/helpers/api.ts
+  s_715a387433563d::t_2c7be981d65ded 220-227
+packages/platform-server/src/rooms/routes.ts
+  s_715a387433563d::t_caccbada95f9b7 159-169
+apps/server/test/room-flow.test.ts
+  s_715a387433563d::t_714aa59e744fb3 7
+  s_715a387433563d::t_59ba47f178d34d 107-151
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.51-trip",
+  "base_commit_sha": "3da645465f028dc3c6b3312bfa862b44232c3124",
+  "prompts": {},
+  "sessions": {
+    "s_715a387433563d": {
+      "agent_id": {
+        "tool": "chengxiaobang",
+        "id": "s_cadztkaosaj7",
+        "model": "auto(free)"
+      },
+      "human_author": "gulingjun <gulingjun@trip.com>"
+    }
+  }
+}
