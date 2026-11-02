@@ -1,0 +1,88 @@
+e2e/room.spec.ts
+  s_715a387433563d::t_efe624bed1f013 138-158,160-173
+  s_715a387433563d::t_67e320db85ac09 159
+  s_715a387433563d::t_c347e2d913ed86 174-229
+games/color-guess/src/meta.ts
+  s_715a387433563d::t_0a34bd53ecd702 1-9
+apps/server/test/multiplayer.test.ts
+  s_715a387433563d::t_360a8d0d79a4b7 110-111
+  s_715a387433563d::t_7fae040d8b0dda 3
+  s_715a387433563d::t_497c4394cb28c7 288,298,300,302,304-305,309,316,319-333
+  s_715a387433563d::t_19a02cf58e4f4c 232-255
+  s_715a387433563d::t_1e0195e9e9d369 4
+  s_715a387433563d::t_5eb55d23bf0193 207-231,256-287,289-297,299,301,303,306-308,310-315,317-318,334-342
+  s_715a387433563d::t_160eb9744a580d 5
+  s_715a387433563d::t_c5212aeb8ee918 104-109,112-206
+apps/server/src/index.ts
+  s_715a387433563d::t_58146ff2d304b3 6
+  s_715a387433563d::t_03601c74c13390 23
+apps/web/vite.config.ts
+  s_715a387433563d::t_b5f1bce9acb67a 16
+games/color-guess/src/routes.ts
+  s_715a387433563d::t_f8264d6e7e8b83 1-4
+README.md
+  s_715a387433563d::t_951cd423bc673f 226
+games/color-guess/src/server/session.ts
+  s_715a387433563d::t_1586b328a5ce12 10
+  s_715a387433563d::t_c5e0018526a4ea 1-9,11-176,179-348,352-364,372-375,378,381-382,387,390,392-424
+  s_715a387433563d::t_1c9efd2cb9ac39 349-351,365-371,376-377,379-380,383-386,388-389,391
+  s_715a387433563d::t_ab22505663745d 177-178
+apps/server/test/engines.test.ts
+  s_715a387433563d::t_989064db233ff6 4-9
+  s_715a387433563d::t_f1ee7f286c30fa 80-86,91-105
+pnpm-lock.yaml
+  s_715a387433563d::t_8ed83e2ce6ffc3 20-22,66-68,146-159
+games/color-guess/src/web/Game.vue
+  s_715a387433563d::t_8fafc46f6c6382 66-69
+  s_715a387433563d::t_b5c4c8d2d8abc7 431-433,435
+  s_715a387433563d::t_d3a87317273f1d 508-510,512
+  s_715a387433563d::t_b4b06e9ca0022d 445-447
+  s_715a387433563d::t_9260a5d0427699 1-65,70-350,354,356-364,367-369,371-403,407,409-416,418-430,434,436-444,448-465,469,471-479,482-484,486-507,511,513-807
+  s_715a387433563d::t_8fb9b5eeadcaa7 404-406,408
+  s_715a387433563d::t_33faeeaa2b9a24 351-353,355,365-366,370,466-468,470,480-481,485
+  s_715a387433563d::t_9a4292703f6820 417
+games/color-guess/src/server/routes.ts
+  s_715a387433563d::t_7a10c538a5e3ab 1-63
+games/color-guess/src/intro.config.ts
+  s_715a387433563d::t_0ee0489a5cf1e6 1-5,7-16
+  s_715a387433563d::t_15fced5ca8fc1c 6
+apps/server/package.json
+  s_715a387433563d::t_1c9279d9e3fd99 21
+games/color-guess/src/colors.ts
+  s_715a387433563d::t_9a978483e89753 1-22
+apps/web/src/main.ts
+  s_715a387433563d::t_e702ef8aa4e7f4 17
+  s_715a387433563d::t_54c6e312622e18 3
+games/color-guess/src/server.ts
+  s_715a387433563d::t_b99b5ee0dc6173 1-30
+games/color-guess/src/web/api.ts
+  s_715a387433563d::t_8a159fc6a4b39b 1-40
+games/color-guess/package.json
+  s_715a387433563d::t_50d25e54961fac 1-19
+games/color-guess/src/view.ts
+  s_715a387433563d::t_f2620ad55c8090 1-49,51,54-56
+  s_715a387433563d::t_5ad22515b92cf9 50,52-53
+apps/web/package.json
+  s_715a387433563d::t_dc252e07c71f2f 15
+games/color-guess/src/engine.ts
+  s_715a387433563d::t_b3c4222768b1e9 3-4
+  s_715a387433563d::t_a780b45b8c1a62 1-2,5-66
+games/color-guess/src/web.ts
+  s_715a387433563d::t_d12f3afb4088c2 1-17
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.51-trip",
+  "base_commit_sha": "28c839a499e57d1681a3e4544d67bb1011bf3b1f",
+  "prompts": {},
+  "sessions": {
+    "s_715a387433563d": {
+      "agent_id": {
+        "tool": "chengxiaobang",
+        "id": "s_cadztkaosaj7",
+        "model": "auto(free)"
+      },
+      "human_author": "gulingjun <gulingjun@trip.com>"
+    }
+  }
+}
