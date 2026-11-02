@@ -1,0 +1,31 @@
+packages/platform-web/src/views/RoomView.vue
+  s_715a387433563d::t_0e58c78377a04d 100-104
+  s_715a387433563d::t_bc7ef9c34e9fdb 559-569
+  s_715a387433563d::t_65ba06081b1c0e 378-379,381-384,386-416
+packages/platform-web/src/views/LobbyView.vue
+  s_715a387433563d::t_10bb50458365db 18-37
+  s_715a387433563d::t_b5f0ba189e8bae 283,288
+  s_715a387433563d::t_b33d8e1188382e 118-121
+  s_715a387433563d::t_9c633ca70feab6 185
+e2e/room.spec.ts
+  s_715a387433563d::t_cb2a81a79d759b 123-124,131-133,137-139
+  s_715a387433563d::t_adedbd1e21c280 378-387
+  s_715a387433563d::t_e188e8357179f4 102
+  s_715a387433563d::t_ae4043c22b7747 348
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.51-trip",
+  "base_commit_sha": "dbcc9f3302a0ce7728d768307a805f6ab271c6f5",
+  "prompts": {},
+  "sessions": {
+    "s_715a387433563d": {
+      "agent_id": {
+        "tool": "chengxiaobang",
+        "id": "s_cadztkaosaj7",
+        "model": "auto(free)"
+      },
+      "human_author": "gulingjun <gulingjun@trip.com>"
+    }
+  }
+}
