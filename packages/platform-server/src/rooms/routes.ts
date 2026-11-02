@@ -156,6 +156,18 @@ export async function roomRoutes(app: FastifyInstance) {
   );
 
   app.post<{ Params: { code: string } }>(
+    '/api/rooms/:code/end-game',
+    { preHandler: requireAuth },
+    async (request, reply) => {
+      try {
+        return toView(rooms.endGameNow(request.params.code, request.user!.id));
+      } catch (err) {
+        return handleError(reply, err);
+      }
+    },
+  );
+
+  app.post<{ Params: { code: string } }>(
     '/api/rooms/:code/end-vote',
     { preHandler: requireAuth },
     async (request, reply) => {

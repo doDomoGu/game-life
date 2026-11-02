@@ -5,6 +5,7 @@ import {
   backToWaiting,
   cancelRoomVote,
   castRoomVote,
+  endGameNow,
   fetchRoom,
   finishRoom,
   kickRoomPlayer,
@@ -59,6 +60,9 @@ const canLeave = computed(
 );
 const canEndVote = computed(
   () => isPlaying.value && !isSolo.value && (room.value?.playerCount ?? 0) > 1,
+);
+const canEndGameNow = computed(
+  () => isPlaying.value && (room.value?.playerCount ?? 0) === 1 && !room.value?.vote,
 );
 const vote = computed(() => room.value?.vote ?? null);
 const isVoteInitiator = computed(() => !!vote.value && vote.value.initiatorId === auth.userId);
@@ -244,6 +248,11 @@ async function onEndVote() {
   await run(() => startEndVote(code.value), '无法发起投票');
 }
 
+async function onEndGameNow() {
+  if (!window.confirm('结束本局并回到房间？本局不会记录成绩。')) return;
+  await run(() => endGameNow(code.value), '无法结束游戏');
+}
+
 async function onRematch() {
   await run(() => startRematchVote(code.value), '无法发起再来一局');
 }
@@ -314,7 +323,17 @@ onUnmounted(() => {
           <span v-if="room?.gameName"> · {{ room.gameName }}</span>
         </p>
       </div>
-      <button v-if="canLeave" type="button" class="btn btn--ghost" @click="onLeave">离开</button>
+      <button
+        v-if="canEndGameNow"
+        type="button"
+        class="btn"
+        @click="onEndGameNow"
+      >
+        结束游戏
+      </button>
+      <button v-else-if="canLeave" type="button" class="btn btn--ghost" @click="onLeave">
+        离开
+      </button>
       <button
         v-else-if="canEndVote && !vote"
         type="button"

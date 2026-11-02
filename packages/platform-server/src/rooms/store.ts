@@ -563,6 +563,23 @@ export function backToWaiting(code: string, userId: string): PlatformRoom {
   return room;
 }
 
+/** 单人房里立刻结束当前对局，回到等待房，保留已选游戏，不写战绩 */
+export function endGameNow(code: string, userId: string): PlatformRoom {
+  const room = getRoom(code);
+  if (!room) fail('房间不存在', 404);
+  if (room.hostUserId !== userId) fail('仅房主可以结束游戏', 403);
+  if (room.status !== 'playing') fail('没有进行中的对局', 400);
+  if (room.players.length > 1) fail('多人对局请发起结束投票', 409);
+  room.vote = null;
+  room.status = 'waiting';
+  room.endReason = null;
+  room.finishedAt = null;
+  resetReady(room);
+  abortGameSession(room);
+  touch(room);
+  return room;
+}
+
 export function beginEndVote(code: string, userId: string): PlatformRoom {
   const room = getRoom(code);
   if (!room) fail('房间不存在', 404);

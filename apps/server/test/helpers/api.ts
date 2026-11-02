@@ -217,6 +217,14 @@ export async function backToWaiting(
   return api<RoomView>(base, `/api/rooms/${code}/back-to-waiting`, { method: 'POST', token });
 }
 
+export async function endGameNow(
+  base: string,
+  token: string,
+  code: string,
+): Promise<ApiResponse<RoomView>> {
+  return api<RoomView>(base, `/api/rooms/${code}/end-game`, { method: 'POST', token });
+}
+
 export async function kickPlayer(
   base: string,
   token: string,

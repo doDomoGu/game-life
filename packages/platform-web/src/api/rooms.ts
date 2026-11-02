@@ -89,6 +89,11 @@ export async function backToWaiting(code: string) {
   return data;
 }
 
+export async function endGameNow(code: string) {
+  const { data } = await api.post<RoomView>(`/rooms/${encodeURIComponent(code)}/end-game`);
+  return data;
+}
+
 export async function startEndVote(code: string) {
   const { data } = await api.post<RoomView>(`/rooms/${encodeURIComponent(code)}/end-vote`);
   return data;

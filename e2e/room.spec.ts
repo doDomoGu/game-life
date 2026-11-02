@@ -227,7 +227,7 @@ test('猜颜色：双人出题，出题者设密码、答题者猜中获胜', as
   await expect(pageB.getByText('正确密码')).toBeVisible();
 });
 
-test('单人房：自动回房、结算后重开、对局中确认放弃', async ({ browser, request }) => {
+test('单人房：自动回房、结算后重开、对局中结束游戏回到等待房', async ({ browser, request }) => {
   const carol = await register(request, 'ec');
   const headers = { Authorization: `Bearer ${carol.token}` };
   const created = await request.post('/api/rooms', { headers });
@@ -255,7 +255,41 @@ test('单人房：自动回房、结算后重开、对局中确认放弃', async
   await expectStatus(page, '对局中');
 
   page.once('dialog', (dialog) => void dialog.accept());
+  await page.getByRole('button', { name: '结束游戏' }).click();
+  await expectStatus(page, '等待中');
+  await expect(page.getByRole('button', { name: '开始游戏' })).toBeVisible();
+
   await page.getByRole('button', { name: '离开' }).click();
   await expect(page).toHaveURL(`${baseURL}/`);
   await expect(page.getByRole('button', { name: '创建房间' })).toBeVisible();
+});
+
+test('华容道单人房可以在游戏内结束游戏，回到房间重新选游戏', async ({ browser, request }) => {
+  const dave = await register(request, 'ek');
+  const headers = { Authorization: `Bearer ${dave.token}` };
+  const created = await request.post('/api/rooms', { headers });
+  expect(created.ok()).toBeTruthy();
+  const room = (await created.json()) as { code: string };
+  expect(
+    (
+      await request.post(`/api/rooms/${room.code}/game`, {
+        headers,
+        data: { gameId: 'klotski' },
+      })
+    ).ok(),
+  ).toBeTruthy();
+  expect((await request.post(`/api/rooms/${room.code}/start`, { headers })).ok()).toBeTruthy();
+
+  const page = await openAs(browser, dave.token);
+  await page.goto(`/room/${room.code}`);
+  await expectStatus(page, '对局中');
+  await expect(page.getByRole('button', { name: '结束游戏' })).toBeVisible();
+  await expect(page.getByRole('button', { name: '离开' })).toHaveCount(0);
+
+  page.once('dialog', (dialog) => void dialog.accept());
+  await page.getByRole('button', { name: '结束游戏' }).click();
+  await expectStatus(page, '等待中');
+  await expect(page.getByRole('combobox')).toBeVisible();
+  await expect(page.getByRole('button', { name: '开始游戏' })).toBeVisible();
+  await page.screenshot({ path: 'test-results/klotski-end-game.png' });
 });

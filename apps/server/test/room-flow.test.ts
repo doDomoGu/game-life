@@ -4,6 +4,7 @@ import {
   api,
   backToWaiting,
   castVote,
+  endGameNow,
   endVote,
   expectOk,
   getRoom,
@@ -101,6 +102,51 @@ test('每种游戏都能完成准备、开始、结束与再来一局', async (t
       assert.equal(gone.status, 404, '所有人离开后房间销毁');
     });
   }
+});
+
+test('单人游戏中可以立即结束并回到等待房', async () => {
+  const fixture = await prepareRoom(server.baseUrl, 'color-guess', 1, 'sologame');
+  await startPrepared(server.baseUrl, fixture);
+  const host = fixture.accounts[0]!;
+  const before = await api(
+    server.baseUrl,
+    `/api/games/color-guess/rooms/${fixture.room.code}`,
+    { token: host.token },
+  );
+  assert.equal(before.status, 200, '开局后存在牌局会话');
+
+  const ended = expectOk(
+    await endGameNow(server.baseUrl, host.token, fixture.room.code),
+    '单人立即结束游戏',
+  );
+  assert.equal(ended.status, 'waiting');
+  assert.equal(ended.gameId, 'color-guess', '回到等待房后保留游戏选择');
+  const after = await api(
+    server.baseUrl,
+    `/api/games/color-guess/rooms/${fixture.room.code}`,
+    { token: host.token },
+  );
+  assert.equal(after.status, 404, '结束游戏后清理牌局会话');
+
+  const restarted = expectOk(
+    await startRoom(server.baseUrl, host.token, fixture.room.code),
+    '结束后可以重新开始',
+  );
+  assert.equal(restarted.status, 'playing');
+  assert.equal(restarted.roundId, 2);
+  expectOk(await endGameNow(server.baseUrl, host.token, fixture.room.code), '再次结束');
+  await leaveRoom(server.baseUrl, host.token);
+
+  const multi = await prepareRoom(server.baseUrl, 'hanabi', 2, 'endmulti');
+  await startPrepared(server.baseUrl, multi);
+  const rejected = await endGameNow(
+    server.baseUrl,
+    multi.accounts[0]!.token,
+    multi.room.code,
+  );
+  assert.equal(rejected.status, 409, '多人对局不能无投票直接结束');
+  await endGameByVote(server.baseUrl, multi);
+  for (const account of multi.accounts) await leaveRoom(server.baseUrl, account.token);
 });
 
 test('房间规则：成员、准备、投票超时、踢人和房主转移', async () => {
