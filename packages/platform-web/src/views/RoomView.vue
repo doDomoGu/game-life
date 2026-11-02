@@ -350,25 +350,34 @@ onUnmounted(() => {
         <section>
           <h2>玩家（{{ room.playerCount }}）</h2>
           <ul class="players room-roster">
-            <li v-for="player in room.players" :key="player.userId">
-              <span class="player-name">
+            <li
+              v-for="player in room.players"
+              :key="player.userId"
+              class="player-card"
+              :class="{ 'player-card--self': player.userId === auth.userId }"
+            >
+              <span class="player-name" :title="player.username">
                 <span class="dot" :class="{ online: player.connected }" aria-hidden="true"></span>
-                {{ player.username }}
-                <span v-if="player.userId === auth.userId" class="self">（我）</span>
+                <span class="name">{{ player.username }}</span>
               </span>
-              <span class="player-actions">
-                <span class="role">
-                  {{ player.role === 'host' ? '房主' : player.ready ? '已准备' : '未准备' }}
-                </span>
-                <button
-                  v-if="isHost && player.role === 'guest' && room.status === 'waiting'"
-                  type="button"
-                  class="kick"
-                  @click="onKick(player)"
-                >
-                  移出
-                </button>
+              <span
+                class="role"
+                :class="{
+                  'role--ready': player.role === 'guest' && player.ready,
+                  'role--idle': player.role === 'guest' && !player.ready,
+                }"
+              >
+                {{ player.role === 'host' ? '房主' : player.ready ? '已准备' : '未准备' }}
               </span>
+              <button
+                v-if="isHost && player.role === 'guest' && room.status === 'waiting'"
+                type="button"
+                class="kick"
+                :aria-label="`移出 ${player.username}`"
+                @click="onKick(player)"
+              >
+                移出
+              </button>
             </li>
           </ul>
         </section>
@@ -493,29 +502,42 @@ h2 {
   list-style: none;
   margin: 0;
   padding: 0;
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 8px;
 }
 .players li {
   display: flex;
-  justify-content: space-between;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+  min-width: 0;
   background: var(--surface);
   border-radius: var(--radius);
-  padding: 10px 14px;
+  padding: 8px 9px;
+}
+.player-card--self {
+  outline: 1px solid var(--accent);
+  outline-offset: -1px;
 }
 .player-name {
-  display: inline-flex;
+  display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 5px;
+  width: 100%;
+  min-width: 0;
 }
-.self {
-  color: var(--muted);
-  font-size: 12px;
+.player-name .name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12.5px;
 }
 .dot {
-  width: 8px;
-  height: 8px;
+  flex: none;
+  width: 7px;
+  height: 7px;
   border-radius: 50%;
   background: #64748b;
 }
@@ -524,20 +546,24 @@ h2 {
 }
 .role {
   color: var(--accent);
-  font-size: 13px;
+  font-size: 12px;
 }
-.player-actions {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
+.role--ready {
+  color: #4ade80;
+}
+.role--idle {
+  color: var(--muted);
 }
 .kick {
+  align-self: flex-start;
+  margin-top: 1px;
   border: 1px solid rgba(248, 113, 113, 0.5);
   background: transparent;
   color: var(--danger);
-  border-radius: 8px;
-  padding: 3px 8px;
-  font-size: 12px;
+  border-radius: 7px;
+  padding: 2px 7px;
+  font-size: 11px;
+  line-height: 1.2;
   cursor: pointer;
 }
 .connection {

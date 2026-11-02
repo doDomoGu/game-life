@@ -99,6 +99,42 @@ test('两名玩家从建房、准备、开始、投票中止到再来一局，�
   await expectStatus(pageA, '对局中');
 });
 
+test('玩家列表每行展示 4 人', async ({ browser, request }) => {
+  const accounts = [];
+  for (const prefix of ['r1', 'r2', 'r3', 'r4']) {
+    accounts.push(await register(request, prefix));
+  }
+  const host = accounts[0]!;
+  const guests = accounts.slice(1);
+  const headers = { Authorization: `Bearer ${host.token}` };
+  const created = await request.post('/api/rooms', { headers });
+  expect(created.ok()).toBeTruthy();
+  const room = (await created.json()) as { code: string };
+  for (const guest of guests) {
+    const joined = await request.post(`/api/rooms/${room.code}/join`, {
+      headers: { Authorization: `Bearer ${guest.token}` },
+    });
+    expect(joined.ok()).toBeTruthy();
+  }
+
+  const page = await openAs(browser, host.token);
+  await page.goto(`/room/${room.code}`);
+  const cards = page.locator('.players li');
+  await expect(cards).toHaveCount(4);
+  const boxes = await cards.evaluateAll((elements) =>
+    elements.map((element) => {
+      const rect = element.getBoundingClientRect();
+      return { x: Math.round(rect.x), y: Math.round(rect.y), width: Math.round(rect.width) };
+    }),
+  );
+  expect(new Set(boxes.map((box) => box.y)).size).toBe(1);
+  expect(boxes[0]!.x).toBeLessThan(boxes[1]!.x);
+  expect(boxes[1]!.x).toBeLessThan(boxes[2]!.x);
+  expect(boxes[2]!.x).toBeLessThan(boxes[3]!.x);
+  expect(Math.max(...boxes.map((box) => box.width)) - Math.min(...boxes.map((box) => box.width))).toBeLessThanOrEqual(1);
+  await page.screenshot({ path: 'test-results/room-four-players.png' });
+});
+
 test('单人房：自动回房、结算后重开、对局中确认放弃', async ({ browser, request }) => {
   const carol = await register(request, 'ec');
   const headers = { Authorization: `Bearer ${carol.token}` };
