@@ -1,0 +1,25 @@
+games/klotski/src/web/scene/pixelPortrait.ts
+  s_715a387433563d::t_16907b8f0aa05b 69-72
+  s_715a387433563d::t_2f2468ee96613f 32-33
+  s_715a387433563d::t_31a6959a8aedd2 1-31,34-65,73-135
+  s_715a387433563d::t_7286188b895523 66-68
+games/klotski/src/web/scene/KlotskiScene.ts
+  s_715a387433563d::t_b43294d85d7a94 96
+  s_715a387433563d::t_16d4f49cbfc0ac 4
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.51-trip",
+  "base_commit_sha": "58f886baecbe110d7c5c02758df59f60ced38cfc",
+  "prompts": {},
+  "sessions": {
+    "s_715a387433563d": {
+      "agent_id": {
+        "tool": "chengxiaobang",
+        "id": "s_cadztkaosaj7",
+        "model": "auto(free)"
+      },
+      "human_author": "gulingjun <gulingjun@trip.com>"
+    }
+  }
+}
