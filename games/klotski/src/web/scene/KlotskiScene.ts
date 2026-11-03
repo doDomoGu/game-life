@@ -1,6 +1,7 @@
 import { Application, Container, FillGradient, Graphics, Text } from 'pixi.js';
 import { COLS, dragGroup, EXIT, ROWS, type Piece, type PieceMove } from '../../board.js';
 import { LEVELS, type KlotskiLevel } from '../../levels.js';
+import { paintPixelPortrait } from './pixelPortrait.js';
 
 export type KlotskiPhase = 'pick' | 'play' | 'demo' | 'done';
 export type KlotskiDemoStatus = 'solving' | 'running' | 'finished';
@@ -92,56 +93,7 @@ function paintPiece(g: Graphics, piece: Piece, cell: number) {
     .fill(lacquer)
     .stroke({ width: 1.5, color: look.trim, alpha: 0.95 });
 
-  const radius = Math.min(width * 0.22, (height - 30) * 0.28);
-  const cx = width / 2;
-  const cy = Math.min(height * 0.38, height - 36 - radius);
-  g.roundRect(cx - radius * 1.25, cy + radius * 0.45, radius * 2.5, radius * 1.45, radius * 0.4).fill(look.robe);
-  g.roundRect(cx - radius * 0.85, cy + radius * 0.62, radius * 1.7, radius * 0.28, 3).fill(look.trim);
-  g.circle(cx, cy, radius).fill(look.face);
-  const eye = Math.max(1.4, radius * 0.08);
-  g.circle(cx - radius * 0.32, cy - radius * 0.05, eye).fill(0x1c140c);
-  g.circle(cx + radius * 0.32, cy - radius * 0.05, eye).fill(0x1c140c);
-  paintHat(g, look, cx, cy, radius);
-  paintBeard(g, look, cx, cy, radius);
-}
-
-function paintHat(g: Graphics, look: PieceLook, cx: number, cy: number, radius: number) {
-  if (look.hat === 'crown') {
-    g.moveTo(cx - radius * 1.05, cy - radius * 0.45)
-      .lineTo(cx - radius * 0.55, cy - radius * 1.55)
-      .lineTo(cx, cy - radius * 0.75)
-      .lineTo(cx + radius * 0.55, cy - radius * 1.55)
-      .lineTo(cx + radius * 1.05, cy - radius * 0.45)
-      .closePath()
-      .fill(look.trim);
-    return;
-  }
-  if (look.hat === 'plume') {
-    g.roundRect(cx - radius * 0.85, cy - radius * 1.25, radius * 1.7, radius * 0.55, 4).fill(0x243044);
-    g.ellipse(cx + radius * 0.15, cy - radius * 1.7, radius * 0.22, radius * 0.7).fill(0xf7f4ea);
-    return;
-  }
-  if (look.hat === 'cap') {
-    g.roundRect(cx - radius * 0.95, cy - radius * 1.2, radius * 1.9, radius * 0.48, 4).fill(look.hair);
-    g.roundRect(cx - radius * 1.15, cy - radius * 0.82, radius * 2.3, radius * 0.22, 3).fill(look.hair);
-    return;
-  }
-  g.roundRect(cx - radius * 0.78, cy - radius * 1.22, radius * 1.56, radius * 0.58, radius * 0.2).fill(0x3a332c);
-  g.roundRect(cx - radius * 0.95, cy - radius * 0.78, radius * 1.9, radius * 0.2, 2).fill(look.trim);
-}
-
-function paintBeard(g: Graphics, look: PieceLook, cx: number, cy: number, radius: number) {
-  const color = look.beard === 'white' ? 0xe7e2d8 : look.hair;
-  if (look.beard === 'none') return;
-  if (look.beard === 'long') {
-    g.roundRect(cx - radius * 0.42, cy + radius * 0.35, radius * 0.84, radius * 1.55, radius * 0.3).fill(color);
-    return;
-  }
-  if (look.beard === 'wide') {
-    g.ellipse(cx, cy + radius * 0.72, radius * 0.85, radius * 0.55).fill(color);
-    return;
-  }
-  g.roundRect(cx - radius * 0.38, cy + radius * 0.32, radius * 0.76, radius * 0.7, radius * 0.25).fill(color);
+  paintPixelPortrait(g, piece, look, width, height);
 }
 
 export class KlotskiScene {
