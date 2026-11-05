@@ -67,7 +67,7 @@ for (const [path, url] of Object.entries(tileUrlFiles)) {
 }
 
 export class ScoreScene {
-  static heightFor(width: number, phase: ScorePhase, fieldCount = 4): number {
+  static heightFor(_width: number, phase: ScorePhase, fieldCount = 4): number {
     if (phase === 'pick') return 44 + QUESTION_COUNTS.length * 72;
     if (phase === 'done') return 220;
     if (phase === 'result') {
