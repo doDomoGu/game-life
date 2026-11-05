@@ -33,6 +33,10 @@ import {
   listPuzzles,
   PUZZLES_PER_DIFFICULTY,
 } from '../../../games/sudoku/src/bank.js';
+import { emptyDraft, gradeDraft } from '../../../games/mahjong-score/src/display.js';
+import { generateRound, randomQuestion } from '../../../games/mahjong-score/src/generate.js';
+import { calculatePoints } from '../../../games/mahjong-score/src/points.js';
+import { validateMahjongScoreSubmit } from '../../../games/mahjong-score/src/rules.js';
 
 test('数独：生成的题目唯一解，终盘合法', () => {
   const { puzzle, solution } = generatePuzzle('normal');
@@ -191,4 +195,90 @@ test('花火：发牌、隐藏自己手牌、非法出牌与轮转', () => {
   playCard(game, 'a', { cardId: card.id });
   assert.equal(game.lastActions.length, 1);
   assert.equal(game.playerOrder[game.turnIndex], 'b');
+});
+
+test('点数练习：符翻换算与出题', () => {
+  const childRon = calculatePoints({
+    groups: [],
+    pair: '55p',
+    hands: [],
+    openMelds: [],
+    concealedKans: [],
+    winTile: '4s',
+    winType: 'ron',
+    waitType: '两面听',
+    riichi: true,
+    ippatsu: false,
+    honba: 0,
+    dealer: false,
+    doraIndicators: [],
+    uraDoraIndicators: [],
+    redDoraCount: 0,
+    han: 1,
+    fu: 30,
+  });
+  assert.equal(childRon.ron, 1000);
+
+  const dealerTsumo = calculatePoints({
+    groups: [],
+    pair: '55p',
+    hands: [],
+    openMelds: [],
+    concealedKans: [],
+    winTile: '4s',
+    winType: 'tsumo',
+    waitType: '两面听',
+    riichi: true,
+    ippatsu: false,
+    honba: 1,
+    dealer: true,
+    doraIndicators: [],
+    uraDoraIndicators: [],
+    redDoraCount: 0,
+    han: 1,
+    fu: 30,
+  });
+  assert.equal(dealerTsumo.each, 600);
+
+  const mangan = calculatePoints({
+    groups: [],
+    pair: '55p',
+    hands: [],
+    openMelds: [],
+    concealedKans: [],
+    winTile: '4s',
+    winType: 'ron',
+    waitType: '两面听',
+    riichi: true,
+    ippatsu: false,
+    honba: 0,
+    dealer: false,
+    doraIndicators: [],
+    uraDoraIndicators: [],
+    redDoraCount: 0,
+    han: 5,
+    fu: 30,
+  });
+  assert.equal(mangan.ron, 8000);
+  assert.equal(mangan.limitLabel, '满贯');
+
+  assert.equal(generateRound(5).length, 5);
+  for (let i = 0; i < 20; i += 1) {
+    const question = randomQuestion();
+    assert.ok(question.fu >= 20);
+    assert.ok(question.han >= 1);
+    assert.ok(question.winTile.match(/^[1-9][mpsz]$/));
+    const draft = emptyDraft();
+    draft.fu = String(question.fu);
+    draft.han = String(question.han);
+    if (question.winType === 'ron') draft.ron = String(question.answer.ron);
+    else if (question.dealer) draft.each = String(question.answer.each);
+    else {
+      draft.child = String(question.answer.child);
+      draft.dealer = String(question.answer.dealer);
+    }
+    assert.equal(gradeDraft(question, draft), true);
+  }
+  assert.equal(validateMahjongScoreSubmit(10), null);
+  assert.ok(validateMahjongScoreSubmit(11));
 });

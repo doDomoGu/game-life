@@ -23,6 +23,7 @@ const SCORE_STYLES: Record<string, LeaderboardStyle> = {
   sudoku: 'sudoku',
   bingo: 'wins',
   'mahjong-wind': 'wins',
+  'mahjong-score': 'score',
   'color-guess': 'wins',
   hanabi: 'score',
   'draw-guess': 'score',

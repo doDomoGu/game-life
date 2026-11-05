@@ -24,7 +24,8 @@
       "@game-life/game-poker-memory/*": ["../../games/poker-memory/src/*"],
       "@game-life/game-sudoku/*": ["../../games/sudoku/src/*"],
       "@game-life/game-klotski/*": ["../../games/klotski/src/*"],
-      "@game-life/game-mahjong-wind/*": ["../../games/mahjong-wind/src/*"]
+      "@game-life/game-mahjong-wind/*": ["../../games/mahjong-wind/src/*"],
+      "@game-life/game-mahjong-score/*": ["../../games/mahjong-score/src/*"]
     }
   },
   "include": ["src/**/*.ts"]

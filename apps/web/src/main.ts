@@ -7,6 +7,7 @@ import { pokerMemoryWebPlugin } from '@game-life/game-poker-memory/web';
 import { klotskiWebPlugin } from '@game-life/game-klotski/web';
 import { sudokuWebPlugin } from '@game-life/game-sudoku/web';
 import { mahjongWindWebPlugin } from '@game-life/game-mahjong-wind/web';
+import { mahjongScoreWebPlugin } from '@game-life/game-mahjong-score/web';
 
 createPlatformApp({
   games: [
@@ -18,5 +19,6 @@ createPlatformApp({
     sudokuWebPlugin,
     klotskiWebPlugin,
     mahjongWindWebPlugin,
+    mahjongScoreWebPlugin,
   ],
 });
