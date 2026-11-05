@@ -1,0 +1,19 @@
+docs/research/draw-alike.md
+  s_eda959129b187d::t_6d1b7d34a7d49e 1-80
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.51-trip",
+  "base_commit_sha": "775ba313aa93b46801de7e9d0413c8553e5e5828",
+  "prompts": {},
+  "sessions": {
+    "s_eda959129b187d": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "6243fa1d-7e87-4104-bd6a-7a4c8e21dc8d",
+        "model": "grok-4.6"
+      },
+      "human_author": "gulingjun <gulingjun@trip.com>"
+    }
+  }
+}
