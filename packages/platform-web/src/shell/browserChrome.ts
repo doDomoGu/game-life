@@ -11,4 +11,25 @@ export function installBrowserChrome(): void {
     apply();
     window.setTimeout(apply, 300);
   });
+
+  const preventZoom = (event: Event) => {
+    event.preventDefault();
+  };
+  document.addEventListener('gesturestart', preventZoom, { passive: false });
+  document.addEventListener('gesturechange', preventZoom, { passive: false });
+  document.addEventListener('gestureend', preventZoom, { passive: false });
+  document.addEventListener(
+    'touchmove',
+    (event) => {
+      if (event.touches.length > 1) event.preventDefault();
+    },
+    { passive: false },
+  );
+  document.addEventListener(
+    'wheel',
+    (event) => {
+      if (event.ctrlKey) event.preventDefault();
+    },
+    { passive: false },
+  );
 }

@@ -162,8 +162,8 @@ test('猜颜色：单人配置、提交猜测和反馈展示', async ({ browser,
   await expect(page.getByText('配置中')).toBeVisible();
   await page.getByRole('button', { name: /10 种/ }).click();
   await expect(page.getByText(/10 色/)).toBeVisible();
-  await page.getByRole('button', { name: /^允许/ }).click();
-  await expect(page.getByText(/允许重复/)).toBeVisible();
+  await page.getByRole('button', { name: /密码可重复/ }).click();
+  await expect(page.getByText(/密码可重复/)).toBeVisible();
   await page.getByRole('button', { name: '开始对局' }).click();
 
   await expect(page.getByText('进行中')).toBeVisible();

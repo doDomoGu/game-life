@@ -172,12 +172,26 @@ function colorUsedElsewhere(color: number) {
 }
 
 function colorDisabled(color: number) {
-  return busy.value || (!config.value.allowDuplicates && colorUsedElsewhere(color));
+  if (busy.value) return true;
+  if (view.value?.phase !== 'setter' || config.value.allowDuplicates) return false;
+  return colorUsedElsewhere(color);
+}
+
+function clearSlot(index = activeSlot.value) {
+  if (busy.value) return;
+  draft.value[index] = null;
+  activeSlot.value = index;
 }
 
 function pickColor(color: number) {
   if (colorDisabled(color)) return;
+  const current = draft.value[activeSlot.value];
+  if (current === color) {
+    clearSlot();
+    return;
+  }
   draft.value[activeSlot.value] = color;
+  if (current !== null) return;
   const next = draft.value.findIndex((value, index) => index > activeSlot.value && value === null);
   if (next >= 0) activeSlot.value = next;
 }
@@ -208,7 +222,7 @@ onBeforeUnmount(() => {
         <span class="pill" :class="`pill--${view.phase}`">{{ phaseLabel }}</span>
         <span class="meta">
           {{ modeLabel }} · {{ config.paletteSize }} 色 ·
-          {{ config.allowDuplicates ? '允许重复' : '不重复' }}
+          {{ config.allowDuplicates ? '密码可重复' : '密码不重复' }}
         </span>
       </header>
 
@@ -257,7 +271,7 @@ onBeforeUnmount(() => {
           </div>
 
           <div class="field">
-            <span class="field__label">重复颜色</span>
+            <span class="field__label">密码是否重复</span>
             <div class="choices choices--inline">
               <button
                 type="button"
@@ -266,7 +280,7 @@ onBeforeUnmount(() => {
                 :disabled="busy"
                 @click="onConfig({ allowDuplicates: false })"
               >
-                不允许
+                密码不重复
               </button>
               <button
                 type="button"
@@ -275,9 +289,10 @@ onBeforeUnmount(() => {
                 :disabled="busy"
                 @click="onConfig({ allowDuplicates: true })"
               >
-                允许 <small>更难</small>
+                密码可重复 <small>更难</small>
               </button>
             </div>
+            <p class="hint">只约束密码本身。猜测时可以重复填同一颜色，用来排除。</p>
           </div>
 
           <div v-if="!isSolo && config.mode === 'setter'" class="field">
@@ -322,7 +337,7 @@ onBeforeUnmount(() => {
           <p class="wait-title">等待房主配置</p>
           <p class="hint">
             {{ modeLabel }} · {{ config.paletteSize }} 色 ·
-            {{ config.allowDuplicates ? '允许重复' : '不重复' }}
+            {{ config.allowDuplicates ? '密码可重复' : '密码不重复' }}
             <template v-if="!isSolo && config.mode === 'setter'">
               · 出题者：{{ setterChoiceLabel }}
             </template>
@@ -334,7 +349,9 @@ onBeforeUnmount(() => {
         <template v-if="isSetter">
           <p class="wait-title">设置 4 位颜色密码</p>
           <p class="hint">
-            对方看不到你设置的内容；{{ config.allowDuplicates ? '允许重复颜色' : '不能重复颜色' }}。
+            对方看不到你设置的内容；{{
+              config.allowDuplicates ? '密码可以重复颜色' : '密码不能重复颜色'
+            }}。
           </p>
           <div class="slots">
             <button
@@ -364,13 +381,15 @@ onBeforeUnmount(() => {
               class="swatch"
               :aria-label="color.name"
               :title="color.name"
+              :class="{ 'swatch--current': draft[activeSlot] === index }"
               :style="{ background: color.hex }"
               :disabled="colorDisabled(index)"
               @click="pickColor(index)"
             ></button>
           </div>
           <div class="actions">
-            <button type="button" class="ghost" @click="resetDraft">清空</button>
+            <button type="button" class="ghost" :disabled="busy" @click="clearSlot()">清空此格</button>
+            <button type="button" class="ghost" :disabled="busy" @click="resetDraft">全部清空</button>
             <button
               type="button"
               class="primary"
@@ -451,6 +470,9 @@ onBeforeUnmount(() => {
           <p class="field__label">
             第 {{ (myBoard?.attempts.length ?? 0) + 1 }} 次猜测
           </p>
+          <p class="hint">
+            点格子再点色块填入或换色；「清空此格」只擦当前格。猜测可以重复颜色。
+          </p>
           <div class="slots">
             <button
               v-for="(value, index) in draft"
@@ -479,13 +501,15 @@ onBeforeUnmount(() => {
               class="swatch"
               :aria-label="color.name"
               :title="color.name"
+              :class="{ 'swatch--current': draft[activeSlot] === index }"
               :style="{ background: color.hex }"
               :disabled="colorDisabled(index)"
               @click="pickColor(index)"
             ></button>
           </div>
           <div class="actions">
-            <button type="button" class="ghost" @click="resetDraft">清空</button>
+            <button type="button" class="ghost" :disabled="busy" @click="clearSlot()">清空此格</button>
+            <button type="button" class="ghost" :disabled="busy" @click="resetDraft">全部清空</button>
             <button
               type="button"
               class="primary"
@@ -690,8 +714,12 @@ onBeforeUnmount(() => {
 .swatch:disabled {
   opacity: 0.28;
 }
+.swatch--current {
+  box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--accent);
+}
 .actions {
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
   margin-top: 12px;
 }

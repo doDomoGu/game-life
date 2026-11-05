@@ -350,7 +350,7 @@ export async function submitGuess(
     session.config.mode === 'race' ? RACE_ATTEMPTS_PER_PLAYER : MAX_ATTEMPTS;
   if (board.attempts.length >= attemptLimit) fail('你的猜测次数已用完');
 
-  const error = validateCode(colors, session.config.paletteSize, session.config.allowDuplicates);
+  const error = validateCode(colors, session.config.paletteSize, true);
   if (error) fail(error);
   const guess = (colors as number[]).slice();
   const feedback = scoreGuess(session.secret ?? [], guess);

@@ -29,8 +29,8 @@ body,
   color: var(--text);
   font-family: var(--font);
   -webkit-tap-highlight-color: transparent;
-  /* 手机上连续点击棋子或按钮会被浏览器当作双击缩放，这里只保留单指滚动与双指缩放 */
-  touch-action: manipulation;
+  /* 禁止双击放大和双指缩放，只保留单指滚动 */
+  touch-action: pan-x pan-y;
 }
 
 button,
@@ -122,6 +122,14 @@ a {
   height: 100%;
   overflow: auto;
   -webkit-overflow-scrolling: touch;
+}
+
+.app-stage {
+  touch-action: pan-x pan-y;
+}
+
+.app-stage canvas {
+  touch-action: none;
 }
 
 .app-stage .app-content {

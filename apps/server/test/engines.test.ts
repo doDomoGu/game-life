@@ -114,8 +114,8 @@ test('猜颜色：全对/半对、重复计数与合法性', () => {
   assert.deepEqual(scoreGuess([1, 1, 2, 3], [1, 2, 1, 4]), { exact: 1, partial: 2 });
   assert.deepEqual(scoreGuess([1, 1, 1, 1], [1, 2, 3, 4]), { exact: 1, partial: 0 });
   assert.equal(validateCode([0, 1, 2, 3], 8, false), null);
-  assert.notEqual(validateCode([0, 0, 1, 2], 8, false), null);
-  assert.equal(validateCode([0, 0, 1, 2], 8, true), null);
+  assert.notEqual(validateCode([0, 0, 1, 2], 8, false), null, '密码不重复时拒绝相同颜色');
+  assert.equal(validateCode([0, 0, 1, 2], 8, true), null, '猜测始终允许重复颜色');
   assert.notEqual(validateCode([0, 1, 2, 8], 8, true), null);
   assert.notEqual(validateCode([0, 1, 2], 8, true), null);
 

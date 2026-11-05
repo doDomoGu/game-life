@@ -44,7 +44,7 @@ export function validateCode(
     }
   }
   if (!allowDuplicates && new Set(code).size !== CODE_LENGTH) {
-    return '当前配置不允许重复颜色';
+    return '密码不允许重复颜色';
   }
   return null;
 }

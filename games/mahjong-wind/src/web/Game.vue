@@ -340,7 +340,7 @@ onBeforeUnmount(() => {
 }
 .stage canvas {
   display: block;
-  touch-action: manipulation;
+  touch-action: none;
 }
 .muted {
   margin: 0;
