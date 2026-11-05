@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, inject, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue';
-import { ROOM_PLAY_KEY, submitRecord, type RoomPlayContext } from '@game-life/platform-web';
+import { fitPlayCanvas, ROOM_PLAY_KEY, submitRecord, type RoomPlayContext } from '@game-life/platform-web';
 import { clonePieces, isWin, placeGroup, type Piece, type PieceMove } from '../board.js';
 import { freshPieces, type KlotskiLevel } from '../levels.js';
 import { KLOTSKI_GAME_ID } from '../meta.js';
@@ -237,6 +237,8 @@ onMounted(async () => {
 function fitScene(hostEl: HTMLElement) {
   const width = KlotskiScene.fitWidth(hostEl.clientWidth || 320, hostEl.clientHeight, phase.value);
   scene.value?.resize(width);
+  const canvasEl = canvas.value;
+  if (canvasEl) fitPlayCanvas(canvasEl, hostEl, width, KlotskiScene.heightFor(width, phase.value));
 }
 
 watch(sceneState, (state) => {
@@ -276,14 +278,14 @@ onBeforeUnmount(() => {
 .stage {
   flex: 1;
   min-height: 0;
-  width: min(100%, 420px);
-  margin: 0 auto;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   overflow: hidden;
 }
 .stage canvas {
   display: block;
-  width: 100%;
-  height: auto;
   touch-action: none;
 }
 .error {

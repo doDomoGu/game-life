@@ -127,11 +127,21 @@ a {
 .app-stage .app-content {
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 }
 
 .app-stage .app-content > * {
   flex: 1;
   min-height: 0;
+}
+
+.app-stage .app-content .page {
+  padding-top: calc(6px + var(--safe-top));
+  padding-bottom: calc(6px + var(--safe-bottom));
+  padding-left: 12px;
+  padding-right: 12px;
+  height: 100%;
+  overflow: hidden;
 }
 
 .app-shell {

@@ -7,5 +7,8 @@ export function installBrowserChrome(): void {
   apply();
   window.visualViewport?.addEventListener('resize', apply);
   window.visualViewport?.addEventListener('scroll', apply);
-  window.addEventListener('orientationchange', apply);
+  window.addEventListener('orientationchange', () => {
+    apply();
+    window.setTimeout(apply, 300);
+  });
 }

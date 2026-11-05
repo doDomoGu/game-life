@@ -673,11 +673,28 @@ h2 {
   flex-direction: column;
   overflow: hidden;
 }
+.room--stage .room__top {
+  margin-bottom: 6px;
+  flex: none;
+}
+.room--stage h1 {
+  font-size: 16px;
+}
+.room--stage .sub {
+  font-size: 12px;
+  margin: 0;
+}
+.room--stage .room__top .btn {
+  min-height: 36px;
+  padding: 0 12px;
+  font-size: 14px;
+}
 .room--stage .room-stage {
   flex: 1;
   min-height: 0;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 }
 .abort-panel {
   flex: 1;

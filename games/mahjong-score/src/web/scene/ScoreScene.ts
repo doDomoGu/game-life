@@ -67,13 +67,14 @@ for (const [path, url] of Object.entries(tileUrlFiles)) {
 }
 
 export class ScoreScene {
-  static heightFor(_width: number, phase: ScorePhase, fieldCount = 4): number {
-    if (phase === 'pick') return 44 + QUESTION_COUNTS.length * 72;
-    if (phase === 'done') return 220;
-    if (phase === 'result') {
-      return 36 + 52 * 3 + 220;
-    }
-    return 36 + 52 * 2 + 10 + 52 + 28 + fieldCount * 50 + 118 + 56;
+  static heightFor(width: number, phase: ScorePhase, fieldCount = 4): number {
+    const tileH = width < 380 ? 38 : 44;
+    if (phase === 'pick') return 32 + QUESTION_COUNTS.length * 60;
+    if (phase === 'done') return 140;
+    if (phase === 'result') return 24 + 20 + tileH * 2 + 16 + 38 + 200;
+    const field = width < 380 ? 38 : 42;
+    const key = width < 380 ? 36 : 40;
+    return 24 + 20 + tileH * 2 + 16 + 18 + fieldCount * (field + 4) + key * 2 + 12 + 44;
   }
 
   static fitWidth(maxWidth: number, maxHeight: number, phase: ScorePhase, fieldCount = 4): number {
@@ -136,6 +137,7 @@ export class ScoreScene {
   };
   private width = 320;
   private built = '';
+  layoutSize = { width: 320, height: 260 };
 
   private constructor(app: Application) {
     this.app = app;
@@ -195,21 +197,15 @@ export class ScoreScene {
     for (const child of children) child.destroy({ children: true });
   }
 
-  private fieldCount() {
-    const question = this.state.question;
-    if (!question) return 4;
-    return 2 + paymentFields(question).length;
-  }
-
   private rebuild() {
     this.clearRoot();
-    const height = ScoreScene.heightFor(this.width, this.state.phase, this.fieldCount());
-    this.app.renderer.resize(this.width, height);
-    this.app.canvas.style.width = `${this.width}px`;
-    this.app.canvas.style.height = `${height}px`;
     if (this.state.phase === 'pick') this.drawPick();
     else if (this.state.phase === 'done') this.drawDone();
     else this.drawPlay();
+    const bounds = this.root.getLocalBounds();
+    const height = Math.max(1, Math.ceil(bounds.y + bounds.height + 8));
+    this.layoutSize = { width: this.width, height };
+    this.app.renderer.resize(this.width, height);
   }
 
   private drawPick() {
@@ -219,8 +215,8 @@ export class ScoreScene {
     });
     this.root.addChild(title);
     QUESTION_COUNTS.forEach((count, index) => {
-      const button = this.button(this.width, 56, `${count} 题`, true);
-      button.position.set(0, 48 + index * 72);
+      const button = this.button(this.width, 48, `${count} 题`, true);
+      button.position.set(0, 36 + index * 58);
       button.on('pointertap', () => this.handlers.onPick(count));
       this.root.addChild(button);
     });
@@ -253,17 +249,20 @@ export class ScoreScene {
   private drawPlay() {
     const question = this.state.question;
     if (!question) return;
-    const tileH = 52;
-    const tileW = 38;
+    const tight = this.width < 380;
+    const tileH = tight ? 38 : 44;
+    const tileW = tight ? 28 : 32;
+    const fieldH = tight ? 38 : 42;
+    const keyH = tight ? 36 : 40;
     let y = 0;
 
     const header = new Text({
       text: `第 ${this.state.index + 1} / ${this.state.total} 题    已对 ${this.state.correct}`,
-      style: { fontFamily: FONT, fontSize: 15, fontWeight: '700', fill: COLOR.cream },
+      style: { fontFamily: FONT, fontSize: 14, fontWeight: '700', fill: COLOR.cream },
     });
     header.position.set(0, y);
     this.root.addChild(header);
-    y += 28;
+    y += 22;
 
     const status = new Text({
       text: [
@@ -276,11 +275,11 @@ export class ScoreScene {
       ]
         .filter(Boolean)
         .join(' · '),
-      style: { fontFamily: FONT, fontSize: 13, fill: COLOR.muted, wordWrap: true, wordWrapWidth: this.width },
+      style: { fontFamily: FONT, fontSize: 12, fill: COLOR.muted, wordWrap: true, wordWrapWidth: this.width },
     });
     status.position.set(0, y);
     this.root.addChild(status);
-    y += 28;
+    y += 20;
 
     const hand = closedTiles13(question);
     const reds = markRedTiles([...hand, question.winTile, ...question.doraIndicators, ...question.uraDoraIndicators], question.redDoraCount);
@@ -291,7 +290,8 @@ export class ScoreScene {
     const uraReds = question.uraDoraIndicators.map(() => reds[redIndex++] === true);
 
     this.root.addChild(this.tileRow(hand, handReds, tileW, tileH, 0, y));
-    y += tileH * (1 + Math.floor((hand.length - 1) / Math.max(1, Math.floor(this.width / (tileW + 2))))) + 10;
+    const handRows = 1 + Math.floor((Math.max(hand.length, 1) - 1) / Math.max(1, Math.floor(this.width / (tileW + 2))));
+    y += tileH * handRows + 8;
 
     const winLabel = new Text({
       text: '和了牌',
@@ -319,7 +319,7 @@ export class ScoreScene {
       this.root.addChild(uraLabel);
       this.root.addChild(this.tileRow(question.uraDoraIndicators, uraReds, tileW, tileH, uraX + 32, y - 4));
     }
-    y += tileH + 6;
+    y += tileH + 4;
 
     const yaku = new Text({
       text: yakuLine(question),
@@ -327,7 +327,7 @@ export class ScoreScene {
     });
     yaku.position.set(0, y);
     this.root.addChild(yaku);
-    y += 22;
+    y += 18;
 
     if (this.state.phase === 'result') {
       const ok = this.state.lastCorrect;
@@ -352,7 +352,7 @@ export class ScoreScene {
       why.position.set(0, y);
       this.root.addChild(why);
       y += 56;
-      const next = this.button(this.width, 48, this.state.index + 1 >= this.state.total ? '查看成绩' : '下一题', true);
+      const next = this.button(this.width, 44, this.state.index + 1 >= this.state.total ? '查看成绩' : '下一题', true);
       next.position.set(0, y);
       next.on('pointertap', () => this.handlers.onNext());
       this.root.addChild(next);
@@ -369,27 +369,27 @@ export class ScoreScene {
       })),
     ];
     fields.forEach((field, index) => {
-      const row = this.fieldRow(field.label, field.value || '—', field.id === this.state.focus);
-      row.position.set(0, y + index * 50);
+      const row = this.fieldRow(field.label, field.value || '—', field.id === this.state.focus, fieldH);
+      row.position.set(0, y + index * (fieldH + 4));
       row.on('pointertap', () => this.handlers.onFocus(field.id));
       this.root.addChild(row);
     });
-    y += fields.length * 50 + 8;
+    y += fields.length * (fieldH + 4) + 6;
 
     const keys = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '⌫'];
-    const gap = 6;
+    const gap = 4;
     const keyW = (this.width - gap * 5) / 6;
     keys.forEach((key, index) => {
-      const button = this.button(keyW, 44, key, false);
-      button.position.set((index % 6) * (keyW + gap), y + Math.floor(index / 6) * 50);
+      const button = this.button(keyW, keyH, key, false);
+      button.position.set((index % 6) * (keyW + gap), y + Math.floor(index / 6) * (keyH + 4));
       button.on('pointertap', () => {
         if (key === '⌫') this.handlers.onBackspace();
         else this.handlers.onDigit(key);
       });
       this.root.addChild(button);
     });
-    y += 108;
-    const submit = this.button(this.width, 48, '提交答案', true);
+    y += (keyH + 4) * 2 + 6;
+    const submit = this.button(this.width, 44, '提交答案', true);
     submit.position.set(0, y);
     submit.on('pointertap', () => this.handlers.onSubmit());
     this.root.addChild(submit);
@@ -417,21 +417,21 @@ export class ScoreScene {
     return loaded instanceof Texture ? loaded : Texture.EMPTY;
   }
 
-  private fieldRow(label: string, value: string, focus: boolean) {
+  private fieldRow(label: string, value: string, focus: boolean, height = 42) {
     const root = new Container();
     const bg = new Graphics();
-    bg.roundRect(0, 0, this.width, 44, 12).fill(focus ? this.gold : COLOR.paper);
+    bg.roundRect(0, 0, this.width, height, 12).fill(focus ? this.gold : COLOR.paper);
     const caption = new Text({
       text: label,
       style: { fontFamily: FONT, fontSize: 13, fill: COLOR.ink },
     });
-    caption.position.set(12, 14);
+    caption.position.set(12, Math.round((height - 16) / 2));
     const amount = new Text({
       text: value,
       style: { fontFamily: FONT, fontSize: 16, fontWeight: '800', fill: COLOR.field },
     });
     amount.anchor.set(1, 0.5);
-    amount.position.set(this.width - 14, 22);
+    amount.position.set(this.width - 14, height / 2);
     root.addChild(bg, caption, amount);
     root.eventMode = 'static';
     root.cursor = 'pointer';

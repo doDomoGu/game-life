@@ -2,6 +2,7 @@
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue';
 import {
   fetchMyScores,
+  fitPlayCanvas,
   submitRecord,
 } from '@game-life/platform-web';
 import type { MyGameScore, SudokuDifficulty } from '@game-life/shared';
@@ -311,6 +312,8 @@ onMounted(async () => {
 function fitScene(hostEl: HTMLElement) {
   const width = SudokuScene.fitWidth(hostEl.clientWidth || 320, hostEl.clientHeight, phase.value);
   scene.value?.resize(width);
+  const canvasEl = canvas.value;
+  if (canvasEl) fitPlayCanvas(canvasEl, hostEl, width, SudokuScene.heightFor(width, phase.value));
 }
 
 watch(sceneState, (state) => {
@@ -506,15 +509,15 @@ onBeforeUnmount(() => {
 .stage {
   flex: 1;
   min-height: 0;
-  width: min(100%, 420px);
-  margin: 0 auto;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   overflow: hidden;
   position: relative;
 }
 .stage canvas {
   display: block;
-  width: 100%;
-  height: auto;
 }
 .done-panel {
   position: absolute;

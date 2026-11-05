@@ -14,6 +14,7 @@ export { fetchLeaderboard, fetchMyScores } from './api/scores.js';
 export { api } from './api/client.js';
 export { useAuthStore } from './stores/auth.js';
 export { ROOM_PLAY_KEY, type RoomPlayContext } from './room/playKey.js';
+export { applyPlayCanvasSize, fitPlayCanvas, playCanvasScale } from './play/fitPlayCanvas.js';
 export { createGameSocket, type ConnectionState, type GameSocket, type GameSocketMessage } from './realtime/socket.js';
 
 export interface CreatePlatformAppOptions {

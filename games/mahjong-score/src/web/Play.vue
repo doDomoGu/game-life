@@ -1,6 +1,11 @@
 <script setup lang="ts">
 import { inject, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue';
-import { ROOM_PLAY_KEY, submitRecord, type RoomPlayContext } from '@game-life/platform-web';
+import {
+  fitPlayCanvas,
+  ROOM_PLAY_KEY,
+  submitRecord,
+  type RoomPlayContext,
+} from '@game-life/platform-web';
 import { emptyDraft, gradeDraft, type AnswerDraft } from '../display.js';
 import { generateRound } from '../generate.js';
 import { MAHJONG_SCORE_GAME_ID, type QuestionCount } from '../meta.js';
@@ -178,15 +183,11 @@ onMounted(async () => {
 });
 
 function fitScene(hostEl: HTMLElement) {
-  const question = currentQuestion();
-  const fields = question ? 2 + (question.winType === 'ron' || question.dealer ? 1 : 2) : 4;
-  const width = ScoreScene.fitWidth(
-    Math.min(420, hostEl.clientWidth || 320),
-    hostEl.clientHeight,
-    phase.value,
-    fields,
-  );
-  scene.value?.resize(width);
+  const layoutW = Math.max(240, Math.min(420, hostEl.clientWidth || 320));
+  scene.value?.resize(layoutW);
+  const canvasEl = canvas.value;
+  const size = scene.value?.layoutSize;
+  if (canvasEl && size) fitPlayCanvas(canvasEl, hostEl, size.width, size.height);
 }
 
 watch(sceneState, (state) => {
@@ -219,20 +220,18 @@ onBeforeUnmount(() => {
   min-height: 0;
   display: flex;
   flex-direction: column;
-  gap: 12px;
 }
 .stage {
-  flex: 0 1 auto;
-  align-self: center;
+  flex: 1;
+  min-height: 0;
   width: 100%;
-  max-width: 420px;
-  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   overflow: hidden;
 }
 .stage canvas {
   display: block;
-  width: 100%;
-  height: auto;
   touch-action: none;
 }
 .error {

@@ -1,6 +1,12 @@
 <script setup lang="ts">
 import { computed, inject, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue';
-import { ROOM_PLAY_KEY, useAuthStore, type GameSocket, type RoomPlayContext } from '@game-life/platform-web';
+import {
+  fitPlayCanvas,
+  ROOM_PLAY_KEY,
+  useAuthStore,
+  type GameSocket,
+  type RoomPlayContext,
+} from '@game-life/platform-web';
 import type { MahjongWindView } from '../view.js';
 import {
   createWindSocket,
@@ -210,6 +216,10 @@ function sceneState(): WindSceneState {
 function fitScene(hostEl: HTMLElement) {
   const width = WindScene.fitWidth(hostEl.clientWidth || 320, hostEl.clientHeight, modal.value);
   scene.value?.resize(width);
+  const canvasEl = canvas.value;
+  if (canvasEl) {
+    fitPlayCanvas(canvasEl, hostEl, width, WindScene.heightFor(width, modal.value));
+  }
 }
 
 // 别人推进了阶段时，收起已经不适用的弹窗
@@ -322,15 +332,14 @@ onBeforeUnmount(() => {
 .stage {
   flex: 1;
   min-height: 0;
-  width: min(100%, 460px);
-  margin: 0 auto;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   overflow: hidden;
 }
 .stage canvas {
   display: block;
-  margin: 0 auto;
-  width: 100%;
-  height: auto;
   touch-action: manipulation;
 }
 .muted {

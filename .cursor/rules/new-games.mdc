@@ -9,5 +9,6 @@ alwaysApply: true
 
 - 在 `docs/games/<gameId>.md` 写中文开发说明，写明 gameId、人数、规则、成绩字段和代码位置。
 - 对局内容用 PixiJS 绘制，例如棋盘、棋子和操作。登录、房间和结算仍走平台底座。
+- 对局画面必须装进房间里剩下的可视区域（含刘海和底部安全区），用 `fitPlayCanvas` 等比缩放，不要让操作按钮被裁掉。
 
 单人游戏的 `minPlayers` 和 `maxPlayers` 都是 1。
